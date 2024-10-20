@@ -101,6 +101,8 @@ public class GitController {
                 }
             }
 
+
+
             //associo i file ad ogni releases
             //associateFilesWithCommits(releases, repoPath);
         } catch (Exception e) {
