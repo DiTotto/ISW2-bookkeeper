@@ -3,9 +3,11 @@ package utils;
 import com.opencsv.CSVWriter;
 import models.FileJava;
 import models.Release;
+import models.Ticket;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -19,14 +21,32 @@ public class WriteCSV {
      * @param baseCsvFilePathForTraining Percorso base del file CSV (es. "walk_forward_step").
      * @param baseCsvFilePathForTesting Percorso base del file CSV (es. "walk_forward_step").
      */
-    public static void writeReleasesForWalkForward(List<Release> releases, String baseCsvFilePathForTraining, String baseCsvFilePathForTesting) {
+    public static void writeReleasesForWalkForward(List<Release> releases, List<Ticket> tickets, String baseCsvFilePathForTraining, String baseCsvFilePathForTesting, String repoPath) {
         // Itera per ogni step del walk forward
         for (int i = 1; i < releases.size(); i++) {
+            List<Release> releaseList = new ArrayList<>();
+            List<Ticket> ticketList = new ArrayList<>();
+            for (Release release : releases) {
+                if (release.getIndex() <= i) {
+                    releaseList.add(release);
+                }
+            }
+            for (Ticket ticket : tickets) {
+                if (ticket.getFixedVersion() < i) {
+                    ticketList.add(ticket);
+                }
+            }
+            Bugginess.markBuggyFilesUsingAffectedVersions(ticketList, releaseList, repoPath);
+
+
             // File di training: contiene tutte le release fino alla i-esima
             String trainingCsvFilePath = baseCsvFilePathForTraining + "training_step_" + i + ".csv";
-            writeReleasesToCsv(releases.subList(0, i), trainingCsvFilePath);
 
+
+            //writeReleasesToCsv(releases.subList(0, i), trainingCsvFilePath);
+            writeReleasesToCsv(releaseList, trainingCsvFilePath);
             // File di test: contiene la release successiva alla i-esima
+            Bugginess.markBuggyFilesUsingAffectedVersions(tickets, releases.subList(i, i + 1), repoPath);
             String testingCsvFilePath = baseCsvFilePathForTesting + "testing_step_" + i + ".csv";
             writeReleasesToCsv(releases.subList(i, i + 1), testingCsvFilePath);
         }

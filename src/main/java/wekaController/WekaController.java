@@ -101,7 +101,7 @@ public class WekaController {
             String trainingFilePath;
             String testingFilePath;
 
-            for (int walkIteration = 1; walkIteration <= numReleases - 1; walkIteration++) {
+            for (int walkIteration = 1; walkIteration <= numReleases ; walkIteration++) {
                 trainingFilePath = Paths.get(path1, "training_step_" + walkIteration + ".arff").toAbsolutePath().toString();
                 testingFilePath = Paths.get(path2, "testing_step_" + walkIteration + ".arff").toAbsolutePath().toString();
 
@@ -151,9 +151,9 @@ public class WekaController {
         // ---- RUN SENZA SELECTION - SEMPLICE ----
 
         for (Classifier classifier : classifiers) {
-
-            classifier.buildClassifier(trainingData);
             Evaluation eval = new Evaluation(testingData);
+            classifier.buildClassifier(trainingData);
+
             eval.evaluateModel(classifier, testingData);
 
 

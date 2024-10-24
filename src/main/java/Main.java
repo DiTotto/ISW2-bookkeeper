@@ -70,7 +70,7 @@ public class Main {
 
             //CALCOLO DELLA BUGGY
             //processReleasesAndMarkBuggyFiles(releases, tickets, "\\Users\\lucad\\Documents\\bookkeeper_fork");
-            markBuggyFilesUsingAffectedVersions(tickets, releases, path);
+            //markBuggyFilesUsingAffectedVersions(tickets, releases, path);
 
             /*for(Ticket ticket: tickets){
                 System.out.println("Ticket: " + ticket);
@@ -86,7 +86,7 @@ public class Main {
 
             /* ----- SCRITTURA ---- */
 
-            WriteCSV.writeReleasesForWalkForward(releases, project + "/fileCSV/training/", project + "/fileCSV/testing/");
+            WriteCSV.writeReleasesForWalkForward(releases, tickets, project + "/fileCSV/training/", project + "/fileCSV/testing/", path);
 
 
             /*for(int i = 1; i < releases.size(); i++) {
