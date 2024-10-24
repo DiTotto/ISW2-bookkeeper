@@ -1,0 +1,4 @@
+In proportion, considerare se usare la media oppure utilizzare la mediana. Se i progetti sono simili tra loro, allora è piu giusto utilizzare la media, altrimenti se i progetti sono diversi è piu giusto eliminare la mediana per eliminare alcuni valori outliners. 
+Probabilmente sono da eliminare 
+Per bookeeper sono da usare avro e zookeeper se voglio usare la media
+Per Syncope, sono da usare OPENJPA e PROTON se voglio usare la media

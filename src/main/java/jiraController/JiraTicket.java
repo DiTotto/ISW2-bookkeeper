@@ -27,8 +27,6 @@ public class JiraTicket {
         Integer j = 0, i = 0, total = 1;
         Integer injectionVersion = null;
 
-        //List<Release> releaseList = getRelease("BOOKKEEPER");
-
         List<Ticket> tickets = new ArrayList<>();
 
         HashMap<Integer, Release> releseIDMap = new HashMap<>();

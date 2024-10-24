@@ -1,6 +1,7 @@
 package utils;
 
 
+import jiraController.JiraRelease;
 import jiraController.JiraTicket;
 import models.FileJava;
 import models.Release;
@@ -27,10 +28,18 @@ public class Proportion {
         throw new IllegalStateException("Utility class");
     }
 
-    public static void getProportion(List<Ticket> tickets) throws IOException {
+    public static void getProportion(List<Ticket> tickets, String projectName) throws IOException {
 
+        List<String> projectsToAdd;
+        if (projectName.equals("BOOKKEEPER")){
+            projectsToAdd = List.of("AVRO", "ZOOKEEPER");
+        }else if (projectName.equals("SYNCOPE")){
+            projectsToAdd = List.of("OPENJPA", "PROTON");
+        }else{
+            projectsToAdd = List.of("AVRO", "OPENJPA", "ZOOKEEPER", "STORM", "TAJO");
+        }
         //List<String> projectsToAdd = List.of("AVRO", "OPENJPA", "ZOOKEEPER", "STORM", "TAJO");
-        List<String> projectsToAdd = List.of("AVRO");
+        //List<String> projectsToAdd = List.of("AVRO");
         projForColdStart.addAll(projectsToAdd);
 
         int numTickets=tickets.size();
@@ -54,9 +63,12 @@ public class Proportion {
                         //prop = coldStart();
                         System.out.println("Cold Start");
                         prop = coldStart();
+                        System.out.println("Proportion calculated from cold start: " + prop);
+                        System.out.println("moving window");
                     }
+                    //non faccio nulla e aspetto di riempire la finestra mobile
                 } else {
-                    System.out.println("moving window");
+                    //System.out.println("moving window");
                     prop = movingWindow();
 
                 }
@@ -104,19 +116,21 @@ public class Proportion {
         //utilizzo i ticket di progetti diversi per fare il cold start
         List<Ticket> tickets = new ArrayList<>();
         List<Double> prop_calc = new ArrayList<>();
+        List<Release> releases = new ArrayList<>();
         double p = 0;
         int counter = 0;
 
         //calcolo la proportion per ogni progetto e lo inserisco nella lista
         //utilizzo la media delle proporzioni per fare il cold start
 
-        /*for(String proj : projForColdStart) {
+        for(String proj : projForColdStart) {
             counter = 0;
             tickets.clear();
-            tickets = JiraTicket.getTickets(proj);
+            releases = JiraRelease.getRelease(proj);
+            tickets = JiraTicket.getTickets(proj, releases);
             for(Ticket ticket: tickets){
                 if(ticket.getInjectedVersion() != null && ticket.getOpeningVersion() != null && ticket.getFixedVersion() != null
-                        && ticket.getOpeningVersion() != ticket.getFixedVersion()){
+                        && (!Objects.equals(ticket.getOpeningVersion(), ticket.getFixedVersion()))){
                     if((double) (ticket.getFixedVersion() - ticket.getInjectedVersion()) / (ticket.getFixedVersion() - ticket.getOpeningVersion()) > 1 ) {
                         p += (double) (ticket.getFixedVersion() - ticket.getInjectedVersion()) / (ticket.getFixedVersion() - ticket.getOpeningVersion());
                     }else{
@@ -127,12 +141,14 @@ public class Proportion {
             }
             if(counter != 0) {
                 p = p / counter;
-                prop_calc.add(prop);
+                prop_calc.add(p);
             }
+            System.out.println("Proportion calculated for project " + proj + ": " + p);
 
-        }*/
 
-        tickets = JiraTicket.getTickets("AVRO", null);
+        }
+
+        /*tickets = JiraTicket.getTickets("AVRO", null);
         for(Ticket ticket: tickets){
             if(ticket.getInjectedVersion() != null && ticket.getOpeningVersion() != null && ticket.getFixedVersion() != null
                     && ticket.getOpeningVersion() != ticket.getFixedVersion()){
@@ -148,12 +164,15 @@ public class Proportion {
             p = p / counter;
             prop_calc.add(p);
         }
-
         return p;
+        */
 
+        //////////////////////////
+        // STUDIARE ASSUNZIONE, è piu giusto usare la media o usare la mediana?
+        // dipende da quanto sono simili tra loro  i progetti considerati
+        //////////////////////////
 
-
-        //restituisco la media delle proportion
+        //restituisco la mediana delle proportion
         //se dispari restituisco il valore centrale
         //se pari restituisco la media dei due valori centrali
         /*prop_calc.sort(Comparator.naturalOrder());
@@ -162,156 +181,26 @@ public class Proportion {
         } else {
             return (prop_calc.get(prop_calc.size() / 2));
         }*/
+
+        // restituisco la media dei valori di proportion calcolati
+        // dato che non ci sono valori outlier, utilizzare la media invece che la mediana può risultare
+        // in una stima più accurata e più corretta
+        // Calcolo della media delle proportion
+        double sum = 0;
+        for (double proportion : prop_calc) {
+            sum += proportion;
+        }
+
+        // Verifica che prop_calc non sia vuota per evitare divisione per zero
+        if (!prop_calc.isEmpty()) {
+            return sum / prop_calc.size();
+        } else {
+            return 0; // oppure un altro valore di default, se non ci sono proporzioni
+        }
+
+
+
+
     }
 
-
-    /* ---------------- CALCOLO ISBUGGY ----------------------- */
-
-    //ottengo i file modificati per ogni commit
-    public static List<String> getModifiedJavaFiles(RevCommit commit, String repoPath) throws IOException {
-        List<String> javaFiles = new ArrayList<>();
-        try (Git git = Git.open(new File(repoPath))) {
-            List<DiffEntry> diffs = getDiffEntries(git, commit);
-            for (DiffEntry diff : diffs) {
-                //String filePath = diff.getNewPath();
-                String filePath = diff.getChangeType() == DiffEntry.ChangeType.DELETE ? diff.getOldPath() : diff.getNewPath();
-                if (filePath.endsWith(".java")) {
-                    javaFiles.add(filePath);
-                }
-            }
-        }
-        return javaFiles;
-    }
-
-    public static List<DiffEntry> getDiffEntries(Git git, RevCommit commit) throws IOException {
-        try (DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
-            diffFormatter.setRepository(git.getRepository());
-            List<DiffEntry> diffs;
-            if (commit.getParentCount() > 0) {
-                diffs = diffFormatter.scan(commit.getParent(0), commit);
-            } else {
-                diffs = diffFormatter.scan(null, commit); // Nessun genitore
-            }
-            return diffs;
-        }
-    }
-
-
-    /*public static void processTickets(List<Ticket> tickets, String repoPath, List<Release> releases) {
-        for (Ticket ticket : tickets) {
-            for (RevCommit commit : ticket.getCommits()) {
-                try {
-                    List<String> modifiedFiles = getModifiedJavaFiles(commit, repoPath);
-                    markBuggyFiles(ticket, modifiedFiles, releases, commit);
-                } catch (IOException e) {
-                    e.printStackTrace(); // Gestione delle eccezioni
-                }
-            }
-        }
-    }
-
-    public static void markBuggyFiles(Ticket ticket, List<String> modifiedFiles, List<Release> releases, RevCommit commit) {
-        Set<Integer> affectedVersions = new HashSet<>(ticket.getAffectedVersion());
-
-        for (Release release : releases) {
-            if (isCommitInRelease(release, commit) && affectedVersions.contains(release.getIndex())) {
-                for (String file : modifiedFiles) {
-                    for (FileJava releaseFile : release.getFiles()) {
-                        if (releaseFile.getName().equals(file)) {
-                            releaseFile.setBuggy(true);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-
-    public static boolean isCommitInRelease(Release release, RevCommit commit) {
-        return release.getCommits().contains(commit);
-    }*/
-
-    //sennò devo prendere tutti gli AV di un ticket, prendere i commit in quel ticket e vedere i file toccati
-    //andare nella release indicata dal AV e mettere i file a isBuggy = true
-
-    /*public static void processReleasesAndMarkBuggyFiles(List<Release> releases, List<Ticket> tickets, String repoPath) throws IOException {
-        // Per ogni release
-        for (Release release : releases) {
-            List<RevCommit> releaseCommits = release.getCommits(); // Ottieni i commit associati alla release
-
-            // Itera sui commit della release
-            for (RevCommit commit : releaseCommits) {
-                Ticket associatedTicket = findTicketByCommit(commit, tickets); // Trova il ticket associato al commit
-
-                if (associatedTicket != null) { // Se esiste un ticket associato
-                    // Verifica se la release corrente è nelle affected version del ticket
-                    if (associatedTicket.getAffectedVersion().contains(release.getIndex())) {
-                        // Ottieni i file modificati dal commit
-                        System.out.println("AV " + associatedTicket.getAffectedVersion());
-                        System.out.println("index: "+ release.getIndex());
-                        List<String> modifiedFiles = getModifiedJavaFiles(commit, repoPath);
-
-                        // Marca i file come buggy
-                        markFilesAsBuggy(modifiedFiles, release);
-                    }
-                }
-            }
-        }
-    }
-
-    public static Ticket findTicketByCommit(RevCommit commit, List<Ticket> tickets) {
-        // Cerca un ticket che contenga il commit nella sua lista
-        for (Ticket ticket : tickets) {
-            if (ticket.getCommits().contains(commit)) {
-                return ticket; // Ritorna il ticket trovato
-            }
-        }
-        return null; // Nessun ticket trovato
-    }*/
-
-
-    public static void markBuggyFilesUsingAffectedVersions(List<Ticket> tickets, List<Release> releases, String repoPath) {
-        for (Ticket ticket : tickets) {
-            List<Integer> affectedVersions = ticket.getAffectedVersion();
-
-            // Per ogni versione affetta (AV)
-            for (Integer affectedVersion : affectedVersions) {
-                Release affectedRelease = getReleaseByVersion(releases, affectedVersion);
-
-                if (affectedRelease != null) {
-                    // Per ogni commit associato al ticket
-                    for (RevCommit commit : ticket.getCommits()) {
-                        try {
-                            List<String> modifiedFiles = getModifiedJavaFiles(commit, repoPath);
-                            // Marca i file come buggy nella release affetta
-                            markFilesAsBuggy(modifiedFiles, affectedRelease);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    public static Release getReleaseByVersion(List<Release> releases, int version) {
-        for (Release release : releases) {
-            if (release.getIndex() == version) {
-                return release;
-            }
-        }
-        return null; // Nessuna release trovata
-    }
-
-    public static void markFilesAsBuggy(List<String> modifiedFiles, Release release) {
-        // Segna i file modificati nella release come buggy
-        for (String modifiedFile : modifiedFiles) {
-            for (FileJava releaseFile : release.getFiles()) {
-                if (releaseFile.getName().equals(modifiedFile)) {
-                    releaseFile.setBuggy(true); // Marca il file come buggy
-                    //break;
-                }
-            }
-        }
-    }
 }
