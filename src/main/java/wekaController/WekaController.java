@@ -96,12 +96,14 @@ public class WekaController {
         };
 
         try {
-            for (int walkIteration = 1; walkIteration <= numReleases - 1; walkIteration++) {
+            String path1 = nameProj + "/fileCSV/training/";
+            String path2 = nameProj + "/fileCSV/testing/";
+            String trainingFilePath;
+            String testingFilePath;
 
-                String path1 = nameProj + "/fileCSV/training/";
-                String path2 = nameProj + "/fileCSV/testing/";
-                String trainingFilePath = Paths.get(path1, "training_step_" + walkIteration + ".arff").toAbsolutePath().toString();
-                String testingFilePath = Paths.get(path2, "testing_step_" + walkIteration + ".arff").toAbsolutePath().toString();
+            for (int walkIteration = 1; walkIteration <= numReleases - 1; walkIteration++) {
+                trainingFilePath = Paths.get(path1, "training_step_" + walkIteration + ".arff").toAbsolutePath().toString();
+                testingFilePath = Paths.get(path2, "testing_step_" + walkIteration + ".arff").toAbsolutePath().toString();
 
                 //carico i dati da ARFF
                 ConverterUtils.DataSource trainingSource = new ConverterUtils.DataSource(trainingFilePath);
@@ -113,8 +115,11 @@ public class WekaController {
                 trainingData.setClassIndex(trainingData.numAttributes() - 1);
                 testingData.setClassIndex(testingData.numAttributes() - 1);
 
-                /* BISOGNA FARE PRIMA FEATURE SELECTION E POI SAMPLING --> DA FARE E DA CAMBIARE!!! */
+                /* BISOGNA FARE PRIMA FEATURE SELECTION E POI SAMPLING! */
 
+                System.out.println("Iterazione: " + walkIteration);
+
+                System.out.println("");
                 // ---- RUN SENZA SELECTION - SEMPLICE ----
                 runSimpleClassifier(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
 
@@ -125,7 +130,7 @@ public class WekaController {
                 runWithFeatureSelectionAndUnderSampling(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
 
                 // ---- RUN CON FUTURE SELECTION E OVER-SAMPLING ----
-                //runWithFeatureSelectionAndOverSampling(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
+                runWithFeatureSelectionAndOverSampling(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
 
 
 
@@ -233,7 +238,7 @@ public class WekaController {
         //System.out.println("Numero di istanze dopo under-sampling: " + underSampledTrainingData.numInstances());
     }
 
-    /*private static double calculateMajorityClassPercentage(Instances data) {
+    private static double calculateMajorityClassPercentage(Instances data) {
 
         int[] classCounts = new int[data.numClasses()];
 
@@ -255,23 +260,22 @@ public class WekaController {
 
 
     private static void runWithFeatureSelectionAndOverSampling(String nameProj, int walkIteration, Instances trainingData, Instances testingData,
-                                                               List<MetricOfClassifier> metricOfClassifierList, Classifier[] classifiers) throws Exception {
+                                                               List<ClassifierMetrics> metricOfClassifierList, Classifier[] classifiers) throws Exception {
         // ---- OVER-SAMPLING ----
         Resample overSampler = new Resample();
         overSampler.setInputFormat(trainingData);
         double majorityClassPercentage = calculateMajorityClassPercentage(trainingData);
         //double majorityClassPercentage = 65.0;
-        double sampleSizePercent = 100.0 * (100.0 - majorityClassPercentage) / majorityClassPercentage;
-        overSampler.setOptions(Utils.splitOptions("-B 1.0 -Z " + sampleSizePercent));
+        overSampler.setOptions(Utils.splitOptions("-B 1.0 -Z " + (majorityClassPercentage*2)));
 
         Instances overSampledTrainingData = Filter.useFilter(trainingData, overSampler);
 
-        System.out.println("Numero di istanze prima del campionamento: " + trainingData.numInstances());
-        System.out.println("Numero di istanze dopo over-sampling: " + overSampledTrainingData.numInstances());
+        System.out.println("Iterazione: " + walkIteration + ", numero di istanze prima del campionamento: " + trainingData.numInstances());
+        System.out.println("Iterazione: " + walkIteration + ", numero di istanze dopo over-sampling: " + overSampledTrainingData.numInstances());
 
         // ---- RUN CON FUTURE SELECTION ----
         runWithFeatureSelection(nameProj, walkIteration, overSampledTrainingData, testingData, metricOfClassifierList, classifiers, false, true);
-    }*/
+    }
 
 
     private static void setValueinTheClassifier(ClassifierMetrics classifier, Evaluation eval, int trainingSet, int testingSet) {

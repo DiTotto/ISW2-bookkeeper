@@ -44,7 +44,7 @@ public class Proportion {
 
         int numTickets=tickets.size();
         System.out.println("Numero di ticket: " + numTickets);
-        movWinSize=Math.max(1, numTickets / 10); //uso il 10% dei ticket, ma almeno 1 ticket
+        movWinSize=Math.max(1, numTickets / 100); //uso il 10% dei ticket, ma almeno 1 ticket
         prop=0;
 
 
@@ -63,7 +63,7 @@ public class Proportion {
                         //prop = coldStart();
                         System.out.println("Cold Start");
                         prop = coldStart();
-                        System.out.println("Proportion calculated from cold start: " + prop);
+                        //System.out.println("Proportion calculated from cold start: " + prop);
                         System.out.println("moving window");
                     }
                     //non faccio nulla e aspetto di riempire la finestra mobile
@@ -73,7 +73,7 @@ public class Proportion {
 
                 }
 
-                System.out.println("Proportion: " + prop);
+                //System.out.println("Proportion: " + prop);
 
                 setInjectedVersion(ticket);
             }
