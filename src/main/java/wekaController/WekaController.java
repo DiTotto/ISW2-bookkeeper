@@ -21,6 +21,9 @@ import weka.filters.supervised.instance.Resample;
 import weka.filters.supervised.instance.SpreadSubsample;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +68,15 @@ public class WekaController {
             saver.setFile(new File(arffFile));
             //saver.setDestination(new File(arffFile));
             saver.writeBatch();
+
+            Path path = Paths.get(arffFile);
+            List<String> lines = Files.readAllLines(path);
+            for (String line : lines) {
+                if (line.contains("@attribute BUGGY")) {
+                    lines.set(lines.indexOf(line), "@attribute BUGGY {true, false}");
+                }
+            }
+            Files.write(path, lines, StandardCharsets.UTF_8);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -101,7 +113,7 @@ public class WekaController {
             String trainingFilePath;
             String testingFilePath;
 
-            for (int walkIteration = 1; walkIteration <= numReleases ; walkIteration++) {
+            for (int walkIteration = 1; walkIteration <= numReleases -1 ; walkIteration++) {
                 trainingFilePath = Paths.get(path1, "training_step_" + walkIteration + ".arff").toAbsolutePath().toString();
                 testingFilePath = Paths.get(path2, "testing_step_" + walkIteration + ".arff").toAbsolutePath().toString();
 
