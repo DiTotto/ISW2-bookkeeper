@@ -273,14 +273,45 @@ public class WekaController {
 
     private static void runWithFeatureSelectionAndOverSampling(String nameProj, int walkIteration, Instances trainingData, Instances testingData,
                                                                List<ClassifierMetrics> metricOfClassifierList, Classifier[] classifiers) throws Exception {
+
+        // ---- FUTURE SELECTION ----
+        AttributeSelection attributeSelection = new AttributeSelection();
+        CfsSubsetEval eval = new CfsSubsetEval();
+        BestFirst search = new BestFirst();
+
+        attributeSelection.setEvaluator(eval);
+        attributeSelection.setSearch(search);
+        attributeSelection.setInputFormat(trainingData);
+
+        // applico il filtro al training set
+        Instances filteredTrainingData = Filter.useFilter(trainingData, attributeSelection);
+        filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
+
+
         // ---- OVER-SAMPLING ----
         Resample overSampler = new Resample();
         overSampler.setInputFormat(trainingData);
         double majorityClassPercentage = calculateMajorityClassPercentage(trainingData);
         //double majorityClassPercentage = 65.0;
-        overSampler.setOptions(Utils.splitOptions("-B 1.0 -Z " + (majorityClassPercentage*2)));
+        double sampleSize = majorityClassPercentage * 2;
+        overSampler.setOptions(Utils.splitOptions("-B 1.0 -Z " + sampleSize));
 
         Instances overSampledTrainingData = Filter.useFilter(trainingData, overSampler);
+
+        System.out.println("Numero di istanze conteggiate prima di effettuare il campionamento: " + trainingData.numInstances());
+        System.out.println("Numero di istanze conteggiate dopo aver effettuato over-sampling: " + overSampledTrainingData.numInstances());
+
+        // ---- RUN CON I DATI OVER-SAMPLED ----
+        for (Classifier classifier : classifiers) {
+            classifier.buildClassifier(overSampledTrainingData);
+            Evaluation evalModel = new Evaluation(testingData);
+            evalModel.evaluateModel(classifier, testingData);
+
+            ClassifierMetrics classifierEval = new ClassifierMetrics(nameProj, walkIteration,
+                    classifier.getClass().getSimpleName(), true, true, false);
+            setValueinTheClassifier(classifierEval, evalModel, overSampledTrainingData.numInstances(), testingData.numInstances());
+            metricOfClassifierList.add(classifierEval);
+        }
 
         System.out.println("Iterazione: " + walkIteration + ", numero di istanze prima del campionamento: " + trainingData.numInstances());
         System.out.println("Iterazione: " + walkIteration + ", numero di istanze dopo over-sampling: " + overSampledTrainingData.numInstances());
