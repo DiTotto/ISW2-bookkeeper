@@ -4,14 +4,19 @@ import com.opencsv.CSVWriter;
 import models.FileJava;
 import models.Release;
 import models.Ticket;
+import models.ClassifierMetrics;
 
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.text.DecimalFormat;
 
 
 public class WriteCSV {
+    private WriteCSV() {
+        throw new IllegalStateException("Utility class");
+    }
 
     /**
      * Scrive i dati delle release in più CSV, uno per ogni step del walk forward.
@@ -89,6 +94,54 @@ public class WriteCSV {
             }
 
         } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void writeWekaCalculation(List<ClassifierMetrics> metrics) throws IOException {
+        DecimalFormat decimalFormat = new DecimalFormat("#.#####");
+        String featureSelection;
+        String cost_sensitive;
+
+        try( CSVWriter writer = new CSVWriter(new FileWriter(metrics.get(0).getNameProject() + "/fileCSV/weka_metrics.csv"))) {
+            // Intestazione del CSV
+            String[] header = { "PROJ", "CLASSIFIER", "ITERATION", "FEATURE_SELECTION", "SAMPLING", "COST_SENSITIVE", "PRECISION", "RECALL", "AUC", "KAPPA", "NPOFB", "TP", "FP", "TN", "FN", "%_OF_TRAINING" };
+            writer.writeNext(header);
+
+            for (ClassifierMetrics metric : metrics){
+                if(metric.isFeature_selection()){
+                    featureSelection = "BEST_FIRST";
+                }else {
+                    featureSelection = "NONE";
+                }
+                if(metric.isCost_sensitive()){
+                    cost_sensitive = "SENSITIVE_LEARNING";
+                }else {
+                    cost_sensitive = "NONE";
+                }
+
+                String[] metricData = {
+                        metric.getNameProject(),
+                        metric.getClassifier(),
+                        String.valueOf(metric.getIteration()),
+                        featureSelection,
+                        metric.getSamplingType(),
+                        cost_sensitive,
+                        decimalFormat.format(metric.getPrecision()),
+                        decimalFormat.format(metric.getRecall()),
+                        decimalFormat.format(metric.getAuc()),
+                        decimalFormat.format(metric.getKappa()),
+                        decimalFormat.format(metric.getNpofb()),
+                        String.valueOf(metric.getTp()),
+                        String.valueOf(metric.getFp()),
+                        String.valueOf(metric.getTn()),
+                        String.valueOf(metric.getFn()),
+                        decimalFormat.format(metric.getPercentageOfTraining())};
+
+                writer.writeNext(metricData);
+
+            }
+        }catch (IOException e) {
             e.printStackTrace();
         }
     }

@@ -8,6 +8,7 @@ import wekaController.WekaController;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.ArrayList;
 
 import static gitController.GitController.calculateMetric;
 import static jiraController.JiraTicket.*;

@@ -15,8 +15,10 @@ public class ClassifierMetrics {
     private double kappa;
     private double tp;
     private double fp;
+    private double npofb;
     private double tn;
     private double fn;
+    private String samplingType;
 
     private double percentOfTheTraining;
 
@@ -33,9 +35,11 @@ public class ClassifierMetrics {
         this.kappa = 0;
         this.tp = 0;
         this.fp = 0;
+        this.npofb = 0;
         this.tn = 0;
         this.fn = 0;
         this.percentOfTheTraining = 0;
+        this.samplingType = "NO_SAMPLING";
 
     }
 
@@ -88,6 +92,7 @@ public class ClassifierMetrics {
     public double getFp() {
         return fp;
     }
+    public double getNpofb() { return npofb; }
 
     public double getTn() {
         return tn;
@@ -101,6 +106,10 @@ public class ClassifierMetrics {
         return percentOfTheTraining;
     }
 
+
+    public String getSamplingType() {
+        return samplingType;
+    }
     /* -- SETTER -- */
 
     public void setNameProject(String nameProject) {
@@ -151,12 +160,18 @@ public class ClassifierMetrics {
         this.fp = fp;
     }
 
+    public void setNpofb(double npofb) { this.npofb = npofb; }
+
     public void setTn(double tn) {
         this.tn = tn;
     }
 
     public void setFn(double fn) {
         this.fn = fn;
+    }
+
+    public void setSamplingType(String samplingType) {
+        this.samplingType = samplingType;
     }
 
     public void setPercentOfTheTraining(double percentOfTheTraining) {
@@ -178,9 +193,14 @@ public class ClassifierMetrics {
                 ", kappa=" + kappa +
                 ", tp=" + tp +
                 ", fp=" + fp +
+                ", npofb=" + npofb +
                 ", tn=" + tn +
                 ", fn=" + fn +
                 ", percentOfTheTraining=" + percentOfTheTraining +
                 '}';
+    }
+
+    public double getPercentageOfTraining() {
+        return percentOfTheTraining;
     }
 }
