@@ -7,6 +7,8 @@ from os.path import isfile, join
 from configs import files_path, include_types, start_value, end_value, step, exclude_strings
 from models import DataEntity, ProcessedDataEntity, get_index_value, calculate_MAP, create_file, calculate_AUC, \
     get_steps, calculate_POP
+import os
+#print(f"Current working directory: {os.getcwd()}")
 
 
 
@@ -43,8 +45,10 @@ for file_num, filename in enumerate(onlyfiles):
         if row_index == 0:
             continue
         lst = row.split(delimiter)  # delimiter
-        id, size, prediction, actual = lst[0], float(lst[1]) if lst[1] else 0, float(lst[2]), True if lst[
-                                                                                                          3].strip().upper() == 'YES' else False
+        #id, size, prediction, actual = lst[0], float(lst[1]) if lst[1] else 0, float(lst[2]), True if lst[
+         #                                                                                                 3].strip().upper() == 'YES' else False
+        id, size, prediction, actual = lst[0], float(lst[1].replace('"', '').strip()) if lst[1] else 0, float(lst[2].replace('"', '').strip()), True if lst[
+                                                                                                                                                            3].strip().upper() == 'YES' else False
         if size != 0:
 
             data_rows.append(DataEntity(id=id, size=size, prediction=prediction, actual=actual, prediction_1=not actual,
