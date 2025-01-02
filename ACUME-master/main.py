@@ -33,7 +33,7 @@ for file_num, filename in enumerate(onlyfiles):
             break
     if exclude_check:
         continue
-
+    #print("path", mypath + filename)
     file = open(mypath + filename)
     total_line_of_code = 0  # total lines of code
     total_nr_no = 0  # total line of false rows (used for normalization of IFA)
@@ -48,7 +48,9 @@ for file_num, filename in enumerate(onlyfiles):
         #id, size, prediction, actual = lst[0], float(lst[1]) if lst[1] else 0, float(lst[2]), True if lst[
          #                                                                                                 3].strip().upper() == 'YES' else False
         id, size, prediction, actual = lst[0], float(lst[1].replace('"', '').strip()) if lst[1] else 0, float(lst[2].replace('"', '').strip()), True if lst[
-                                                                                                                                                            3].strip().upper() == 'YES' else False
+                                                                                                                                                            3].replace('"','').strip().upper() == 'TRUE' else False
+        print(lst[3].replace('"','').strip().upper())
+        #print("id", id, "size", size, "prediction", prediction, "actual", actual)
         if size != 0:
 
             data_rows.append(DataEntity(id=id, size=size, prediction=prediction, actual=actual, prediction_1=not actual,
