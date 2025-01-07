@@ -28,9 +28,8 @@ public class AcumeController {
     public static double retrieveNpofb(Instances data, AbstractClassifier classifier) {
         //Npofb stands for Number of Positive Out of False Positives
 
-        double npofb = 0.0;
-        List<AcumeModel> AcumeModelList = new ArrayList<>();
-        //int lastIndexOfData = data.numAttributes() - 1;
+
+        List<AcumeModel> acumeModelList = new ArrayList<>();
         int lastAttributeIndex = data.classIndex();
         for (int i = 0; i < data.numInstances(); i++) {
             try {
@@ -39,20 +38,18 @@ public class AcumeController {
                 double size = instance.value(0);
                 double probability = getProbability(instance, classifier);
                 if (probability < 0) {
-                    logger.log(SEVERE, "Probabilità non valida per l'istanza " + i);
+                    logger.log(SEVERE, "Probabilità non valida per l'istanza {0}", i);
                     continue; // Salta l'istanza in caso di errore
                 }
                 String actual = instance.stringValue(lastAttributeIndex);
                 AcumeModel acumeModel = new AcumeModel(i, size, probability, actual);
-                //String value = data.get(i).toString(lastIndexOfData).equals("true") ? "true" : "false";
-                //AcumeModel acumeModel = new AcumeModel(i, size, probability, value);
-                AcumeModelList.add(acumeModel);
+                acumeModelList.add(acumeModel);
             } catch (Exception e) {
                 logger.log(SEVERE,"Error while retrieving Npofb");
                 e.printStackTrace();
             }
         }
-        writeOnAcumeCSV(AcumeModelList);
+        writeOnAcumeCSV(acumeModelList);
         startAcumeScript();
         double npofb20 = -1;
         npofb20 = getNPofB20Value(Paths.get("ACUME-master/EAM_NEAM_output.csv").toAbsolutePath().toString());
@@ -89,9 +86,9 @@ public class AcumeController {
 
     private static void startAcumeScript() {
         try {
-            String AcumeMainPath = Paths.get("ACUME-master/main.py").toAbsolutePath().toString();
+            String acumeMainPath = Paths.get("ACUME-master/main.py").toAbsolutePath().toString();
             //ProcessBuilder processBuilder = new ProcessBuilder();
-            String[] command =  {"python3", AcumeMainPath, "NPofB"};
+            String[] command =  {"python3", acumeMainPath, "NPofB"};
             //processBuilder.command("python", AcumeMainPath);
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.directory(new File("C:/Users/lucad/Documents/ISW2-bookkeeper/ISW2-bookkeeper/ACUME-master")); // Imposta la directory corretta
