@@ -141,11 +141,9 @@ public class GitController {
     }
 
     private static void processFile(String filePath, Release release) {
-        if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
-            if (!fileExistsInRelease(filePath, release)) {
-                FileJava file = new FileJava(filePath);
-                release.addFile(file);
-            }
+        if (filePath.endsWith(JAVA_FILE_EXTENSION) && !fileExistsInRelease(filePath, release)) {
+            FileJava file = new FileJava(filePath);
+            release.addFile(file);
         }
     }
 
