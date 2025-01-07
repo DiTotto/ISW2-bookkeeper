@@ -1,5 +1,6 @@
 package gitcontroller;
 
+import common.Main;
 import models.Release;
 import models.FileJava;
 
@@ -27,8 +28,11 @@ import java.io.InputStreamReader;
 import java.nio.file.Path;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class GitController {
+
+    private static final Logger logger = Logger.getLogger(GitController.class.getName());
 
     private GitController() {
         throw new IllegalStateException("Utility class");
@@ -61,7 +65,7 @@ public class GitController {
     }
 
     public static List<RevCommit> retrieveCommits(String path) {
-        System.out.println("Retrieving commits from repository...");
+        logger.log(java.util.logging.Level.INFO, "\u001B[37mRetrieving commits from repository...\u001B[0m");
         Iterable<RevCommit> commits;
         List<RevCommit> commitList=new ArrayList<>();
         try (Git git = Git.open((Path.of(path).toFile()))) {
@@ -72,16 +76,16 @@ public class GitController {
         } catch (IOException e) {
             e.printStackTrace();
         } catch (NoHeadException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         } catch (GitAPIException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
         return commitList;
     }
 
     //associo i commit alle release
     public static void associateCommitsWithReleases(List<Release> releases, String repoPath) {
-        System.out.println("Associating commits with releases...");
+        logger.log(java.util.logging.Level.INFO , "\u001B[37mAssociating commits with releases...\u001B[0m");
         /*try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
             //l'istanza di Git permette di accedere a tutti i comandi di Git
             try (Git git = new Git(repository)) {
@@ -153,7 +157,7 @@ public class GitController {
     //associo i file ai commit --> l'idea base è tirarmi fuori tutti i file del progetto dalla lista dei file
     //toccati dai commit
     public static void associateFilesWithCommits(List<Release> releases, String repoPath) {
-        System.out.println("Associating files with commits...");
+        logger.log(java.util.logging.Level.INFO, "\u001B[37mAssociating files with commits...\u001B[0m");
         try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
             //try (Git git = new Git(repository)) {
                 //ottengo tutti i commit dal repository
@@ -211,7 +215,7 @@ public class GitController {
     }
 
     public static void calculateLOCForReleaseFiles(List<Release> releases, String repoPath) {
-        System.out.println("Calculating LOC for release files...");
+        logger.log(java.util.logging.Level.INFO, "\u001B[37mCalculating LOC for release files...\u001B[0m");
         try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
             for (Release release : releases) {
                 for (RevCommit commit : release.getCommits()) {
@@ -336,7 +340,7 @@ public class GitController {
 
     //calcolare il numero di revisioni per ogni file Java in ogni release
     public static void calculateNumberOfRevisionsPerFile(List<Release> releases, String repoPath) {
-        System.out.println("Calculating number of revisions per file...");
+        logger.log(java.util.logging.Level.INFO, "\u001B[37mCalculating number of revisions per file...\u001B[0m");
         try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
             try (Git git = new Git(repository)) {
                 for (Release release : releases) {
@@ -402,7 +406,7 @@ public class GitController {
     }
 
     public static void calculateTouchedLOCAndRemovedLOCForReleaseFiles(List<Release> releases, String repoPath) {
-        System.out.println("Calculating touched and removed LOC for release files...");
+        logger.log(java.util.logging.Level.INFO, "\u001B[37mCalculating touched LOC and removed LOC for release files...\u001B[0m");
         try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
             for (Release release : releases) {
                 Map<String, Integer> totalTouchedLocPerFile = new HashMap<>();
@@ -487,7 +491,7 @@ public class GitController {
 
 
     public static void calculateAddedLOCAndMaxPerFile(List<Release> releases, String repoPath) {
-        System.out.println("Calculating added LOC and max per file...");
+        logger.log(java.util.logging.Level.INFO, "\u001B[37mCalculating added LOC and max for release files...\u001B[0m");
         try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
             try (Git git = new Git(repository)) {
                 for (Release release : releases) {
@@ -557,7 +561,7 @@ public class GitController {
     //se è il primissimo commit --> non ho parent
     private static void calculateAddedLOCAndMaxForFirstCommit(Repository repository, RevCommit commit, List<FileJava> javaFiles, Map<String, Integer> maxLocAddedPerFile) throws IOException {
         try (DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
-            System.out.println("Calculating added LOC and max for first commit...");
+            logger.log(java.util.logging.Level.INFO, "\u001B[37mCalculating added LOC and max for first commit...\u001B[0m");
             diffFormatter.setRepository(repository);
 
             List<DiffEntry> diffs = diffFormatter.scan(null, commit);
@@ -592,7 +596,7 @@ public class GitController {
     }
 
     public static void calculateAvgAddedLOC(List<Release> releases) {
-        System.out.println("Calculating average added LOC...");
+        logger.log(java.util.logging.Level.INFO, "\u001B[37mCalculating average added LOC...\u001B[0m");
         for (Release release : releases) {
             for (FileJava javaFile : release.getFiles()) {
                 int totalAddedLOC = javaFile.getLocAdded(); //LOC aggiunte totali
@@ -610,7 +614,7 @@ public class GitController {
 
 
     public static void calculateNumberOfAuthorsPerFile(List<Release> releases, String repoPath) {
-        System.out.println("Calculating number of authors per file...");
+        logger.log(java.util.logging.Level.INFO, "\u001B[37mCalculating number of authors per file...\u001B[0m");
         try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
             try (Git git = new Git(repository)) {
                 for (Release release : releases) {
