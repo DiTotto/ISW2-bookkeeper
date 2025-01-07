@@ -27,6 +27,22 @@ public class AcumeController {
         throw new IllegalStateException("AcumeController class");
     }
 
+
+    private static Properties loadConfiguration() {
+        Properties properties = new Properties();
+        try (InputStream input = AcumeController.class.getClassLoader().getResourceAsStream("config.properties")) {
+            if (input == null) {
+                logger.severe("Configurazione non trovata in resources/config.properties");
+                return null;  // Ritorna null se il file non è stato trovato
+            }
+            properties.load(input);  // Carica le proprietà dal file
+        } catch (IOException e) {
+            logger.severe("Errore nel caricare config.properties");
+            e.printStackTrace();
+            return null;  // Ritorna null in caso di errore
+        }
+        return properties;  // Ritorna le proprietà caricate
+    }
     public static double retrieveNpofb(Instances data, AbstractClassifier classifier) {
         //Npofb stands for Number of Positive Out of False Positives
 
@@ -89,18 +105,7 @@ public class AcumeController {
     private static void startAcumeScript() {
         try {
 
-            Properties properties = new Properties();
-            try (InputStream input = AcumeController.class.getClassLoader().getResourceAsStream("config.properties")) {
-                if (input == null) {
-                    logger.severe("Configurazione non trovata in resources/config.properties");
-                    return;
-                }
-                properties.load(input);
-            } catch (IOException e) {
-                logger.severe("Errore nel caricare config.properties");
-                e.printStackTrace();
-                return;
-            }
+            Properties properties = loadConfiguration();
 
             // Ottieni il percorso della directory da configurazione
             String acumeDirectoryPath = properties.getProperty("acume.directory");
