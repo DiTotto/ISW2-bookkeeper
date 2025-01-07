@@ -16,6 +16,8 @@ import static java.util.logging.Level.INFO;
 
 import static java.util.logging.Level.SEVERE;
 import static utils.WriteCSV.writeOnAcumeCSV;
+import java.util.Properties;
+
 
 public class AcumeController {
 
@@ -38,7 +40,7 @@ public class AcumeController {
                 double size = instance.value(0);
                 double probability = getProbability(instance, classifier);
                 if (probability < 0) {
-                    logger.log(SEVERE, "Probabilità non valida per l'istanza {0}", i);
+                    logger.log(SEVERE, "Probabilità non valida per l''istanza {0}", i);
                     continue; // Salta l'istanza in caso di errore
                 }
                 String actual = instance.stringValue(lastAttributeIndex);
@@ -86,42 +88,60 @@ public class AcumeController {
 
     private static void startAcumeScript() {
         try {
+
+            Properties properties = new Properties();
+            try (InputStream input = AcumeController.class.getClassLoader().getResourceAsStream("config.properties")) {
+                if (input == null) {
+                    logger.severe("Configurazione non trovata in resources/config.properties");
+                    return;
+                }
+                properties.load(input);
+            } catch (IOException e) {
+                logger.severe("Errore nel caricare config.properties");
+                e.printStackTrace();
+                return;
+            }
+
+            // Ottieni il percorso della directory da configurazione
+            String acumeDirectoryPath = properties.getProperty("acume.directory");
+            if (acumeDirectoryPath == null || acumeDirectoryPath.isEmpty()) {
+                logger.severe("ACUME directory non definita in config.properties");
+                return;
+            }
+
+
             String acumeMainPath = Paths.get("ACUME-master/main.py").toAbsolutePath().toString();
-            //ProcessBuilder processBuilder = new ProcessBuilder();
             String[] command =  {"python3", acumeMainPath, "NPofB"};
-            //processBuilder.command("python", AcumeMainPath);
             ProcessBuilder processBuilder = new ProcessBuilder(command);
-            processBuilder.directory(new File("C:/Users/lucad/Documents/ISW2-bookkeeper/ISW2-bookkeeper/ACUME-master")); // Imposta la directory corretta
+            //processBuilder.directory(new File("C:/Users/lucad/Documents/ISW2-bookkeeper/ISW2-bookkeeper/ACUME-master")); // Imposta la directory corretta
+            processBuilder.directory(new File(acumeDirectoryPath));
             Process process = processBuilder.start();
 
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
                     BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
-                /*BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));*/
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    //System.out.println(line);
                     logger.log(INFO, line);
                 }
 
-                reader.close();
-                //reader.lines().forEach(line -> logger.log(INFO, line));
-                //errorReader.lines().forEach(line -> logger.log(SEVERE, line));
-                /*BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));*/
+
                 String errorLine;
                 while ((errorLine = errorReader.readLine()) != null) {
-                    //System.out.println(errorLine);
                     logger.log(SEVERE, errorLine);
                 }
-                errorReader.close();
 
                 int exitCode = process.waitFor();
-                //System.out.println("\nExited with error code : " + exitCode);
                 if (exitCode == 0) {
                     logger.log(INFO, "Acume script executed successfully");
                 } else {
                     logger.log(SEVERE, "Acume script failed");
                 }
             }
+        }
+        catch (InterruptedException e) {
+        // Ripristina lo stato di interruzione
+        Thread.currentThread().interrupt();
+        logger.log(SEVERE, "Script execution was interrupted");
         }
         catch (Exception e) {
                 logger.log(SEVERE, "Error while executing the script");
@@ -139,17 +159,11 @@ public class AcumeController {
             }
             double[] predicted = classifier.distributionForInstance(data);
             return predicted[buggyIndex];
-            /*for (int j = 0; j < predicted.length; j++) {
-                if (data.classAttribute().value(j).equals("true")) {
-                    return predicted[j];
-                }
-            }*/
         } catch (Exception e) {
             logger.log(SEVERE, "Error while getting probability");
             e.printStackTrace();
             return 0.0;
         }
-        //return 0.0;
 
     }
 }
