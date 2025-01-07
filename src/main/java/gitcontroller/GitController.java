@@ -117,6 +117,45 @@ public class GitController {
 
     }
 
+    private static void processRelease(Repository repository, Release release) {
+        for (RevCommit releaseCommit : release.getCommits()) {
+            processCommit(repository, release, releaseCommit);
+        }
+    }
+
+    //se il commit è incluso in quella release e se il commit è associato alla release
+    //inizializzo un nuovo TreeWalk per navigare l'albero del commit
+    private static void processCommit(Repository repository, Release release, RevCommit releaseCommit) {
+        try (TreeWalk treeWalk = new TreeWalk(repository)) {
+            treeWalk.addTree(releaseCommit.getTree());
+            treeWalk.setRecursive(true);
+
+            while (treeWalk.next()) {
+                processFile(treeWalk.getPathString(), release);
+            }
+        } catch (IOException e) {
+            logger.log(java.util.logging.Level.SEVERE, "Error processing commit: " + releaseCommit.getName(), e);
+        }
+    }
+
+    private static void processFile(String filePath, Release release) {
+        if (filePath.endsWith(".java")) {
+            if (!fileExistsInRelease(filePath, release)) {
+                FileJava file = new FileJava(filePath);
+                release.addFile(file);
+            }
+        }
+    }
+
+    private static boolean fileExistsInRelease(String filePath, Release release) {
+        for (FileJava existingFile : release.getFiles()) {
+            if (existingFile.getName().equals(filePath)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     //associo i file ai commit --> l'idea base è tirarmi fuori tutti i file del progetto dalla lista dei file
     //toccati dai commit
     public static void associateFilesWithCommits(List<Release> releases, String repoPath) {
@@ -125,38 +164,7 @@ public class GitController {
                 //ottengo tutti i commit dal repository
 
                     for (Release release : releases) {
-                        for (RevCommit releaseCommit : release.getCommits()) {
-                            //se il commit è incluso in quella release
-                                //se il commit è associato alla release
-                                //inizializzo un nuovo TreeWalk per navigare l'albero del commit
-                                try (TreeWalk treeWalk = new TreeWalk(repository)) {
-                                    treeWalk.addTree(releaseCommit.getTree());
-                                    treeWalk.setRecursive(true);
-
-                                    while (treeWalk.next()) {
-                                        //per ogni file, ottengo il nome
-                                        String filePath = treeWalk.getPathString();
-                                        //se il file è un file Java
-                                        if (filePath.endsWith(".java")) {
-                                            //controllo se è già presente nella lista dei file
-                                            //non voglio duplicati
-                                            boolean exists = false;
-                                            for (FileJava existingFile : release.getFiles()) {
-                                                if (existingFile.getName().equals(filePath)) {
-                                                    exists = true;
-                                                    break; //esco se trovo un duplicato
-                                                }
-                                            }
-                                            //se non esiste, lo aggiungo creando un nuovo oggetto FileJava
-                                            if (!exists) {
-                                                FileJava file = new FileJava(filePath);
-                                                release.addFile(file);
-                                            }
-                                        }
-                                    }
-                                }
-                            //}
-                        }
+                        processRelease(repository, release);
                     }
                 //}
             //}
