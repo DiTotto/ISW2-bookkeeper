@@ -50,7 +50,7 @@ for file_num, filename in enumerate(onlyfiles):
         id, size, prediction, actual = lst[0], float(lst[1].replace('"', '').strip()) if lst[1] else 0, float(lst[2].replace('"', '').strip()), True if lst[
                                                                                                                                                             3].replace('"','').strip().upper() == 'TRUE' else False
         print(lst[3].replace('"','').strip().upper())
-        #print("id", id, "size", size, "prediction", prediction, "actual", actual)
+        print("id", id, "size", size, "prediction", prediction, "actual", actual)
         if size != 0:
 
             data_rows.append(DataEntity(id=id, size=size, prediction=prediction, actual=actual, prediction_1=not actual,
