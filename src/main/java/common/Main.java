@@ -44,8 +44,8 @@ public class Main {
     }
     public static void main(String[] args) {
         try {
-            //System.out.println("Starting...");
-            logger.log(java.util.logging.Level.INFO, "Starting...");
+
+            logger.log(java.util.logging.Level.INFO, "\u001B[32mStarting...\u001B[0m");
             Properties properties = loadConfiguration();
             String project = properties.getProperty("main.projectB", "defaultProject");
             String path = properties.getProperty("main.pathB", "defaultPath");
@@ -95,36 +95,23 @@ public class Main {
             }
 
             //CALCOLO DELLA BUGGY
-            //processReleasesAndMarkBuggyFiles(releases, tickets, "\\Users\\lucad\\Documents\\bookkeeper_fork");
-            //markBuggyFilesUsingAffectedVersions(tickets, releases, path);
+            // la bugginess ora è controllato dalla classe Bugginess invocata da WriteCSV
 
-            /*for(Ticket ticket: tickets){
-                System.out.println("Ticket: " + ticket);
-            }
 
-            for(Release release: releases){
-                for(FileJava file: release.getFiles()){
-                    if(file.isBuggy()){
-                        System.out.println("File: " + file.getName() + " is buggy");
-                    }
-                }
-            }*/
 
             /* ----- SCRITTURA ---- */
 
             WriteCSV.writeReleasesForWalkForward(releases, tickets, project + "/fileCSV/training/", project + "/fileCSV/testing/", path);
 
 
-            /*for(int i = 1; i < releases.size(); i++) {
-                WekaController.convertCSVtoARFF();
-            }*/
+            /* ----- WEKA ----- */
 
             WekaController.convertAllCsvInFolder(project + "/fileCSV/training");
             WekaController.convertAllCsvInFolder(project + "/fileCSV/testing");
 
             calculateWeka(project, releases.size());
 
-            System.out.println("Done!");
+            logger.log(java.util.logging.Level.INFO, "\u001B[32mDone!\u001B[0m");
 
         } catch (Exception e) {
             e.printStackTrace();
