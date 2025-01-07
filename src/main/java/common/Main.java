@@ -1,5 +1,6 @@
 package common;
 
+import acumecontroller.AcumeController;
 import gitcontroller.GitController;
 import jiracontroller.JiraRelease;
 import jiracontroller.JiraTicket;
@@ -8,8 +9,12 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import utils.WriteCSV;
 import wekacontroller.WekaController;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
+import java.util.logging.Logger;
 
 import static gitcontroller.GitController.calculateMetric;
 import static jiracontroller.JiraTicket.*;
@@ -20,13 +25,31 @@ import static wekacontroller.WekaController.calculateWeka;
 
 public class Main {
 
+    private static final Logger logger = Logger.getLogger(AcumeController.class.getName());
+
+    private static Properties loadConfiguration() {
+        Properties properties = new Properties();
+        try (InputStream input = AcumeController.class.getClassLoader().getResourceAsStream("config.properties")) {
+            if (input == null) {
+                logger.severe("Configurazione non trovata in resources/config.properties");
+                return properties;  // Ritorna null se il file non è stato trovato
+            }
+            properties.load(input);  // Carica le proprietà dal file
+        } catch (IOException e) {
+            logger.severe("Errore nel caricare config.properties");
+            e.printStackTrace();
+            return properties;  // Ritorna null in caso di errore
+        }
+        return properties;  // Ritorna le proprietà caricate
+    }
     public static void main(String[] args) {
         try {
-            System.out.println("Starting...");
-            String project = "BOOKKEEPER";
-            //String project = "SYNCOPE";
-            String path = "\\Users\\lucad\\Documents\\bookkeeper_fork";
-            //String path = "\\Users\\lucad\\Documents\\syncope";
+            //System.out.println("Starting...");
+            logger.log(java.util.logging.Level.INFO, "Starting...");
+            Properties properties = loadConfiguration();
+            String project = properties.getProperty("main.projectB", "defaultProject");
+            String path = properties.getProperty("main.pathB", "defaultPath");
+
 
             List<Release> releases;
             List<Ticket> tickets;
