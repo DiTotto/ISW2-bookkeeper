@@ -6,10 +6,10 @@ public class AcumeModel {
     private double probability;
     private String value;
 
-    public AcumeModel(int id, double size, double probablity, String value) {
+    public AcumeModel(int id, double size, double probability, String value) {
         this.id = id;
         this.size = size;
-        this.probability = probablity;
+        this.probability = probability;
         this.value = value;
     }
 

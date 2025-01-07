@@ -1,10 +1,7 @@
 package utils;
 
 import com.opencsv.CSVWriter;
-import models.FileJava;
-import models.Release;
-import models.Ticket;
-import models.ClassifierMetrics;
+import models.*;
 
 import java.io.FileWriter;
 import java.io.IOException;
@@ -142,6 +139,29 @@ public class WriteCSV {
 
             }
         }catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void writeOnAcumeCSV(List<AcumeModel> AcumeList) {
+        try (CSVWriter writer = new CSVWriter(new FileWriter("ACUME-master/csv/acume.csv"))) {
+            // Intestazione del CSV
+            String[] header = { "ID", "Size", "Probability", "Value" };
+            writer.writeNext(header);
+
+            // Itera sulle release e sui file per scrivere i dati
+            for (AcumeModel acume : AcumeList) {
+                String[] acumeData = {
+                        String.valueOf(acume.getId()),               // ID
+                        String.valueOf(acume.getSize()),             // SIZE
+                        String.valueOf(acume.getProbability()),      // PROBABILITY
+                        acume.getValue()                              // VALUE
+                };
+
+                writer.writeNext(acumeData);
+            }
+
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

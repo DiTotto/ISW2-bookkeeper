@@ -9,6 +9,7 @@ import weka.classifiers.trees.RandomForest;
 import weka.classifiers.evaluation.Evaluation;
 import weka.classifiers.CostMatrix;
 import weka.classifiers.meta.CostSensitiveClassifier;
+import weka.classifiers.AbstractClassifier;
 import weka.core.Instances;
 import weka.core.Utils;
 import weka.core.converters.ArffSaver;
@@ -31,7 +32,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-
+import static acumeController.AcumeController.retrieveNpofb;
 import utils.WriteCSV;
 public class WekaController {
 
@@ -180,7 +181,7 @@ public class WekaController {
             ClassifierMetrics classifierEval = new ClassifierMetrics(nameProj, walkIteration,
                     classifier.getClass().getSimpleName(), false, false, false);
 
-            setValueinTheClassifier(classifierEval, eval, trainingData.numInstances(), testingData.numInstances());
+            setValueinTheClassifier(classifierEval, eval, trainingData.numInstances(), testingData.numInstances(), testingData, (AbstractClassifier) classifier);
             metricOfClassifierList.add(classifierEval);
         }
     }
@@ -194,6 +195,9 @@ public class WekaController {
         CfsSubsetEval eval = new CfsSubsetEval();
         BestFirst search = new BestFirst();
 
+        //BEST FIRST BI-DIREZIONALE (se non specifico è unidirezionale)
+        search.setOptions(Utils.splitOptions("-D 2"));
+
         attributeSelection.setEvaluator(eval);
         attributeSelection.setSearch(search);
         attributeSelection.setInputFormat(trainingData);
@@ -203,17 +207,18 @@ public class WekaController {
         Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
 
         filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
-        //filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
+        filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
 
 
         for (Classifier classifier : classifiers) {
             classifier.buildClassifier(filteredTrainingData);
-            Evaluation evalModel = new Evaluation(filteredTestingData);
+            //Evaluation evalModel = new Evaluation(filteredTestingData);
+            Evaluation evalModel = new Evaluation(testingData);
             evalModel.evaluateModel(classifier, filteredTestingData);
 
             ClassifierMetrics classifierEval = new ClassifierMetrics(nameProj, walkIteration,
                     classifier.getClass().getSimpleName(), true, false, false);
-            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances());
+            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances(), filteredTestingData, (AbstractClassifier) classifier);
             metricOfClassifierList.add(classifierEval);
         }
     }
@@ -226,6 +231,9 @@ public class WekaController {
         CfsSubsetEval eval = new CfsSubsetEval();
         BestFirst search = new BestFirst();
 
+        //BEST FIRST BI-DIREZIONALE (se non specifico è unidirezionale)
+        search.setOptions(Utils.splitOptions("-D 2"));
+
         attributeSelection.setEvaluator(eval);
         attributeSelection.setSearch(search);
         attributeSelection.setInputFormat(trainingData);
@@ -235,6 +243,7 @@ public class WekaController {
         filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
 
         Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
+        filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
 
         // ---- UNDER-SAMPLING ----
         SpreadSubsample underSampler = new SpreadSubsample();
@@ -250,7 +259,8 @@ public class WekaController {
             fc.setFilter(underSampler);
             fc.setClassifier(classifier);
             fc.buildClassifier(filteredTrainingData);
-            Evaluation evalModel = new Evaluation(filteredTestingData);
+            //Evaluation evalModel = new Evaluation(filteredTestingData);
+            Evaluation evalModel = new Evaluation(testingData);
             evalModel.evaluateModel(fc, filteredTestingData);
 
             /*classifier.buildClassifier(underSampledTrainingData);
@@ -259,7 +269,7 @@ public class WekaController {
 
             ClassifierMetrics classifierEval = new ClassifierMetrics(nameProj, walkIteration,
                     classifier.getClass().getSimpleName(), true, true, false);
-            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances());
+            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances(), filteredTestingData, (AbstractClassifier) classifier);
             classifierEval.setSamplingType("UNDER_SAMPLING");
             metricOfClassifierList.add(classifierEval);
         }
@@ -297,6 +307,10 @@ public class WekaController {
         CfsSubsetEval eval = new CfsSubsetEval();
         BestFirst search = new BestFirst();
 
+        //BEST FIRST BI-DIREZIONALE (se non specifico è unidirezionale)
+        search.setOptions(Utils.splitOptions("-D 2"));
+
+
         attributeSelection.setEvaluator(eval);
         attributeSelection.setSearch(search);
         attributeSelection.setInputFormat(trainingData);
@@ -306,7 +320,7 @@ public class WekaController {
         filteredTrainingData.setClassIndex(filteredTrainingData.numAttributes() - 1);
 
         Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
-
+        filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
 
         // ---- OVER-SAMPLING ----
         Resample overSampler = new Resample();
@@ -327,12 +341,13 @@ public class WekaController {
             fc.setClassifier(classifier);
             fc.buildClassifier(filteredTrainingData);
 
-            Evaluation evalModel = new Evaluation(filteredTestingData);
+            //Evaluation evalModel = new Evaluation(filteredTestingData);
+            Evaluation evalModel = new Evaluation(testingData);
             evalModel.evaluateModel(fc, filteredTestingData);
 
             ClassifierMetrics classifierEval = new ClassifierMetrics(nameProj, walkIteration,
                     classifier.getClass().getSimpleName(), true, true, false);
-            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances());
+            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances(), filteredTestingData, (AbstractClassifier) classifier);
             classifierEval.setSamplingType("OVER_SAMPLING");
             metricOfClassifierList.add(classifierEval);
         }
@@ -352,6 +367,9 @@ public class WekaController {
         CfsSubsetEval eval = new CfsSubsetEval();
         BestFirst search = new BestFirst();
 
+        //BEST FIRST BI-DIREZIONALE (se non specifico è unidirezionale)
+        search.setOptions(Utils.splitOptions("-D 2"));
+
         attributeSelection.setEvaluator(eval);
         attributeSelection.setSearch(search);
         attributeSelection.setInputFormat(trainingData);
@@ -362,13 +380,13 @@ public class WekaController {
 
         // applico il filtro al testing set
         Instances filteredTestingData = Filter.useFilter(testingData, attributeSelection);
-        //filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
+        filteredTestingData.setClassIndex(filteredTestingData.numAttributes() - 1);
 
         // -- COST-SENSITIVE --
         CostMatrix costMatrix = new CostMatrix(2);
         costMatrix.setElement(0,0,0.0); //Costo del true negative
-        costMatrix.setElement(0,1,1.0); //Costo del false positive
-        costMatrix.setElement(1,0,10.0); //Costo del false negative
+        costMatrix.setElement(0,1,10.0); //Costo del false positive
+        costMatrix.setElement(1,0,1.0); //Costo del false negative
         costMatrix.setElement(1,1,0.0); //Costo del true positive
 
         for (Classifier classifier : classifiers) {
@@ -377,19 +395,20 @@ public class WekaController {
             costSensitiveClassifier.setClassifier(classifier);
             costSensitiveClassifier.buildClassifier(filteredTrainingData);
 
-            Evaluation evalModel = new Evaluation(filteredTestingData, costMatrix);
+            //Evaluation evalModel = new Evaluation(filteredTestingData, costMatrix);
+            Evaluation evalModel = new Evaluation(testingData);
             evalModel.evaluateModel(costSensitiveClassifier, filteredTestingData);
 
             ClassifierMetrics classifierEval = new ClassifierMetrics(nameProj, walkIteration,
                     classifier.getClass().getSimpleName(), true, false, true);
 
-            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances());
+            setValueinTheClassifier(classifierEval, evalModel, filteredTrainingData.numInstances(), filteredTestingData.numInstances(), filteredTestingData, (AbstractClassifier) classifier);
             metricOfClassifierList.add(classifierEval);
         }
 
     }
 
-    private static void setValueinTheClassifier(ClassifierMetrics classifier, Evaluation eval, int trainingSet, int testingSet) {
+    private static void setValueinTheClassifier(ClassifierMetrics classifier, Evaluation eval, int trainingSet, int testingSet, Instances testingData, AbstractClassifier absClassifier) {
 
         classifier.setPrecision(eval.precision(0));
         classifier.setRecall(eval.recall(0));
@@ -400,7 +419,7 @@ public class WekaController {
         classifier.setTn(eval.numTrueNegatives(0));
         classifier.setFn(eval.numFalseNegatives(0));
         classifier.setPercentOfTheTraining(100.0 * trainingSet / (trainingSet + testingSet));
-
+        classifier.setNpofb(retrieveNpofb(testingData, absClassifier));
 
 
     }

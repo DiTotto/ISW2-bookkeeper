@@ -23,8 +23,10 @@ public class Main {
     public static void main(String[] args) {
         try {
             System.out.println("Starting...");
-            String project = "BOOKKEEPER";
-            String path = "\\Users\\lucad\\Documents\\bookkeeper_fork";
+            //String project = "BOOKKEEPER";
+            String project = "SYNCOPE";
+            //String path = "\\Users\\lucad\\Documents\\bookkeeper_fork";
+            String path = "\\Users\\lucad\\Documents\\syncope";
 
             List<Release> releases;
             List<Ticket> tickets;
