@@ -1,3 +1,5 @@
+package common;
+
 import gitController.GitController;
 import jiraController.JiraRelease;
 import jiraController.JiraTicket;

@@ -1507,7 +1507,7 @@ tests/activemq5-unit-tests/src/test/java/org/apache/activemq/broker/jmx/MBeanOpe
 tests/activemq5-unit-tests/src/test/java/org/apache/activemq/broker/jmx/MBeanTest.java-3;1505; 0.500;NO
 tests/activemq5-unit-tests/src/test/java/org/apache/activemq/broker/jmx/PurgeTest.java-3;258; 0.500;NO
 tests/activemq5-unit-tests/src/test/java/org/apache/activemq/broker/jmx/TransportConnectorMBeanTest.java-3;141; 0.500;NO
-tests/activemq5-unit-tests/src/test/java/org/apache/activemq/broker/Main.java-3;87; 0.500;NO
+tests/activemq5-unit-tests/src/test/java/org/apache/activemq/broker/common.Main.java-3;87; 0.500;NO
 tests/activemq5-unit-tests/src/test/java/org/apache/activemq/broker/MarshallingBrokerTest.java-3;76; 0.500;NO
 tests/activemq5-unit-tests/src/test/java/org/apache/activemq/broker/message/security/MessageAuthenticationTest.java-3;103; 0.500;NO
 tests/activemq5-unit-tests/src/test/java/org/apache/activemq/broker/MessageExpirationTest.java-3;277; 0.500;NO
