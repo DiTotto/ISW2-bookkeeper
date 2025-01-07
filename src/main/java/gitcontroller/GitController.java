@@ -156,6 +156,8 @@ public class GitController {
         return false;
     }
 
+
+
     //associo i file ai commit --> l'idea base è tirarmi fuori tutti i file del progetto dalla lista dei file
     //toccati dai commit
     public static void associateFilesWithCommits(List<Release> releases, String repoPath) {
