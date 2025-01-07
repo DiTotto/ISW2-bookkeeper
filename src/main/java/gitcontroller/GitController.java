@@ -33,6 +33,7 @@ public class GitController {
 
     private static final Logger logger = Logger.getLogger(GitController.class.getName());
 
+    private static final String JAVA_FILE_EXTENSION = ".java";
     private GitController() {
         throw new IllegalStateException("Utility class");
     }
@@ -134,12 +135,13 @@ public class GitController {
                 processFile(treeWalk.getPathString(), release);
             }
         } catch (IOException e) {
-            logger.log(java.util.logging.Level.SEVERE, "Error processing commit: " + releaseCommit.getName(), e);
+            logger.log(java.util.logging.Level.SEVERE, e,
+                    () -> "Error processing commit: " + releaseCommit.getName());
         }
     }
 
     private static void processFile(String filePath, Release release) {
-        if (filePath.endsWith(".java")) {
+        if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
             if (!fileExistsInRelease(filePath, release)) {
                 FileJava file = new FileJava(filePath);
                 release.addFile(file);
@@ -221,7 +223,7 @@ public class GitController {
 
             for (DiffEntry entry : diffs) {
                 String filePath = entry.getNewPath();
-                if (filePath.endsWith(".java")) {
+                if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
                     // Se il file modificato è un file Java, calcola i LOC solo per questo file
                     for (FileJava javaFile : javaFiles) {
                         if (javaFile.getName().equals(filePath)) {
@@ -289,7 +291,7 @@ public class GitController {
                                 String filePath = diff.getNewPath();
 
                                 // Considera solo i file Java
-                                if (filePath.endsWith(".java")) {
+                                if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
                                     //incremento il valore del contatore --> ha avuto una revisione
                                     fileRevisions.put(filePath, fileRevisions.getOrDefault(filePath, 0) + 1);
                                 }
@@ -303,7 +305,7 @@ public class GitController {
                             for (DiffEntry diff : diffs) {
                                 String filePath = diff.getNewPath();
 
-                                if (filePath.endsWith(".java")) {
+                                if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
                                     fileRevisions.put(filePath, fileRevisions.getOrDefault(filePath, 0) + 1);
                                 }
                             }
@@ -390,7 +392,7 @@ public class GitController {
             for (DiffEntry diff : diffs) {
                 String filePath = diff.getNewPath();
 
-                if (filePath.endsWith(".java")) {
+                if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
                     for (FileJava javaFile : javaFiles) {
                         if (javaFile.getName().equals(filePath)) {
                             int addedLines = 0;
@@ -463,7 +465,7 @@ public class GitController {
             for (DiffEntry diff : diffs) {
                 String filePath = diff.getNewPath();
 
-                if (filePath.endsWith(".java")) {
+                if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
                     int addedLines = 0;
 
                     for (Edit edit : diffFormatter.toFileHeader(diff).toEditList()) {
@@ -493,7 +495,7 @@ public class GitController {
             for (DiffEntry diff : diffs) {
                 String filePath = diff.getNewPath();
 
-                if (filePath.endsWith(".java")) {
+                if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
                     int addedLines = 0;
 
                     ObjectId objectId = diff.getNewId().toObjectId();
@@ -560,7 +562,7 @@ public class GitController {
                             for (DiffEntry diff : diffs) {
                                 String filePath = diff.getNewPath();
 
-                                if (filePath.endsWith(".java")) {
+                                if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
                                     //aggiunta dell'autore
                                     fileAuthors.computeIfAbsent(filePath, k -> new HashSet<>()).add(author);
                                 }
@@ -575,7 +577,7 @@ public class GitController {
                             for (DiffEntry diff : diffs) {
                                 String filePath = diff.getNewPath();
 
-                                if (filePath.endsWith(".java")) {
+                                if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
                                     fileAuthors.computeIfAbsent(filePath, k -> new HashSet<>()).add(author);
                                 }
                             }
