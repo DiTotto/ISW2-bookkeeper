@@ -25,7 +25,7 @@ import static wekacontroller.WekaController.calculateWeka;
 
 public class Main {
 
-    private static final Logger logger = Logger.getLogger(AcumeController.class.getName());
+    private static final Logger logger = Logger.getLogger(Main.class.getName());
 
     private static Properties loadConfiguration() {
         Properties properties = new Properties();
