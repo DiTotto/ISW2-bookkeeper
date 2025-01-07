@@ -1,18 +1,11 @@
 package utils;
 
 
-import jiraController.JiraRelease;
-import jiraController.JiraTicket;
-import models.FileJava;
+import jiracontroller.JiraRelease;
+import jiracontroller.JiraTicket;
 import models.Release;
 import models.Ticket;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.diff.DiffFormatter;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.util.io.DisabledOutputStream;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.*;
 

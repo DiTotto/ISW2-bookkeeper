@@ -1,4 +1,4 @@
-package jiraController;
+package jiracontroller;
 
 import models.Release;
 import models.Ticket;
@@ -14,7 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import static jiraController.JiraRelease.*;
+import static jiracontroller.JiraRelease.*;
 import static utils.JSON.readJsonFromUrl;
 
 public class JiraTicket {

@@ -1,22 +1,20 @@
 package common;
 
-import gitController.GitController;
-import jiraController.JiraRelease;
-import jiraController.JiraTicket;
+import gitcontroller.GitController;
+import jiracontroller.JiraRelease;
+import jiracontroller.JiraTicket;
 import models.*;
 import org.eclipse.jgit.revwalk.RevCommit;
 import utils.WriteCSV;
-import wekaController.WekaController;
+import wekacontroller.WekaController;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.ArrayList;
 
-import static gitController.GitController.calculateMetric;
-import static jiraController.JiraTicket.*;
+import static gitcontroller.GitController.calculateMetric;
+import static jiracontroller.JiraTicket.*;
 import static utils.Proportion.*;
-import static utils.Bugginess.*;
-import static wekaController.WekaController.calculateWeka;
+import static wekacontroller.WekaController.calculateWeka;
 
 
 

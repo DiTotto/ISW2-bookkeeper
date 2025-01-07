@@ -1,4 +1,4 @@
-package wekaController;
+package wekacontroller;
 
 import models.ClassifierMetrics;
 import weka.classifiers.Classifier;
@@ -32,7 +32,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import static acumeController.AcumeController.retrieveNpofb;
+import static acumecontroller.AcumeController.retrieveNpofb;
 import utils.WriteCSV;
 public class WekaController {
 
