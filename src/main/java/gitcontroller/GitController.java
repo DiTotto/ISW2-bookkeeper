@@ -587,64 +587,57 @@ public class GitController {
     public static void calculateNumberOfAuthorsPerFile(List<Release> releases, String repoPath) {
         logger.log(java.util.logging.Level.INFO, "\u001B[37mCalculating number of authors per file...\u001B[0m");
         try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
-            try (Git git = new Git(repository)) {
                 for (Release release : releases) {
                     //la mappa traccia gli autori del file java (per evitare duplicati)
                     Map<String, Set<String>> fileAuthors = new HashMap<>();
+                    processCommitAuthors(repository, release, fileAuthors);
+                    updateReleaseFiles(release, fileAuthors);
 
-                    for (RevCommit commit : release.getCommits()) {
-                        //viene recuperato l'autore del commit
-                        String author = commit.getAuthorIdent().getName();
-
-                        int parentCount = commit.getParentCount();
-
-                        if (parentCount > 0) {
-                            DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE);
-                            diffFormatter.setRepository(repository);
-
-                            List<DiffEntry> diffs = diffFormatter.scan(commit.getParent(0), commit);
-
-                            for (DiffEntry diff : diffs) {
-                                String filePath = diff.getNewPath();
-
-                                if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
-                                    //aggiunta dell'autore
-                                    fileAuthors.computeIfAbsent(filePath, k -> new HashSet<>()).add(author);
-                                }
-                            }
-                        } else {
-                            //senza parent, confronto con albero vuoto
-                            DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE);
-                            diffFormatter.setRepository(repository);
-
-                            List<DiffEntry> diffs = diffFormatter.scan(null, commit);
-
-                            for (DiffEntry diff : diffs) {
-                                String filePath = diff.getNewPath();
-
-                                if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
-                                    fileAuthors.computeIfAbsent(filePath, k -> new HashSet<>()).add(author);
-                                }
-                            }
-                        }
-                    }
-
-
-                    for (Map.Entry<String, Set<String>> entry : fileAuthors.entrySet()) {
-                        String fileName = entry.getKey();
-                        int numberOfAuthors = entry.getValue().size(); // Conteggio degli autori unici
-
-                        FileJava javaFile = release.getJavaFileByName(fileName);
-                        if (javaFile == null) {
-                            javaFile = new FileJava(fileName);
-                            release.addFile(javaFile);
-                        }
-                        javaFile.setNauth(numberOfAuthors);
-                    }
                 }
-            }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private static void processCommitAuthors(Repository repository, Release release, Map<String, Set<String>> fileAuthors) {
+        for (RevCommit commit : release.getCommits()) {
+            String author = commit.getAuthorIdent().getName();
+            List<DiffEntry> diffs = getDiffEntriesAuthors(repository, commit);
+            for (DiffEntry diff : diffs) {
+                String filePath = diff.getNewPath();
+                if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
+                    fileAuthors.computeIfAbsent(filePath, k -> new HashSet<>()).add(author);
+                }
+            }
+        }
+    }
+
+    // Ottieni la lista di DiffEntry per un commit, considerando i genitori o il commit stesso
+    private static List<DiffEntry> getDiffEntriesAuthors(Repository repository, RevCommit commit) {
+        try (DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
+            diffFormatter.setRepository(repository);
+            if (commit.getParentCount() > 0) {
+                return diffFormatter.scan(commit.getParent(0), commit);
+            } else {
+                return diffFormatter.scan(null, commit);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return Collections.emptyList(); // Ritorna una lista vuota in caso di errore
+        }
+    }
+
+    // Aggiorna i file della release con il numero di autori
+    private static void updateReleaseFiles(Release release, Map<String, Set<String>> fileAuthors) {
+        for (Map.Entry<String, Set<String>> entry : fileAuthors.entrySet()) {
+            String fileName = entry.getKey();
+            int numberOfAuthors = entry.getValue().size();
+            FileJava javaFile = release.getJavaFileByName(fileName);
+            if (javaFile == null) {
+                javaFile = new FileJava(fileName);
+                release.addFile(javaFile);
+            }
+            javaFile.setNauth(numberOfAuthors);
         }
     }
 
