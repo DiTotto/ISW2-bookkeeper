@@ -39,7 +39,7 @@ public class Proportion {
         projForColdStart.addAll(projectsToAdd);
 
         int numTickets=tickets.size();
-        logger.log(java.util.logging.Level.INFO, "Numero di ticket: " + numTickets);
+        logger.log(java.util.logging.Level.INFO, "Numero di ticket: {0}", numTickets);
         movWinSize=Math.max(1, numTickets / 100); //uso il 10% dei ticket, ma almeno 1 ticket
         prop=0;
 
@@ -133,11 +133,8 @@ public class Proportion {
                 p = p / counter;
                 propCalc.add(p);
             }
-            System.out.println("Proportion calculated for project " + proj + ": " + p);
-
-
+            logger.log(java.util.logging.Level.INFO, "Proportion calculated for project {0}: {1}", new Object[]{proj, p});
         }
-
 
         //////////////////////////
         // STUDIARE ASSUNZIONE, è piu giusto usare la media o usare la mediana?
@@ -147,7 +144,11 @@ public class Proportion {
         //restituisco la mediana delle proportion
         //se dispari restituisco il valore centrale
         //se pari restituisco la media dei due valori centrali
-        /*prop_calc.sort(Comparator.naturalOrder());
+        /*
+        Il codice seguente è necessario nel caso in cui debba essere usata la mediana piuttosto che la media
+
+        prop_calc.sort(Comparator.naturalOrder());
+
         if(prop_calc.size() % 2 == 0) {
             return ((prop_calc.get(prop_calc.size() / 2) + prop_calc.get(prop_calc.size() / 2 - 1)) / 2);
         } else {
