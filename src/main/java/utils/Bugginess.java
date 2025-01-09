@@ -16,6 +16,9 @@ import java.util.List;
 
 public class Bugginess {
 
+    private Bugginess() {
+        throw new UnsupportedOperationException("Utility class");
+    }
     /* ---------------- CALCOLO ISBUGGY ----------------------- */
 
     //ottengo i file modificati per ogni commit
