@@ -66,7 +66,7 @@ public class Main {
             calculateMetric(releases, path);
 
             // retrieve the commits of the project
-            try { commits = GitController.retrieveCommits(path); } catch (GitOperationException e) { e.printStackTrace(); return; }
+            commits = GitController.retrieveCommits(path);
 
             // associate the commits to the tickets. If the commit contains the ticket id, the commit is associated
             // to that specified ticket

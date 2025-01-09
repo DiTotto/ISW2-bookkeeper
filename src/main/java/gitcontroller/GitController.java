@@ -56,7 +56,7 @@ public class GitController {
     public static void calculateMetric(List<Release> releases, String repoPath) {
         associateCommitsWithReleases(releases, repoPath);
         associateFilesWithCommits(releases, repoPath);
-        try { calculateLOCForReleaseFiles(releases, repoPath);} catch (GitOperationException e) { e.printStackTrace(); throw new RuntimeException(e); }
+        try { calculateLOCForReleaseFiles(releases, repoPath);} catch (GitOperationException e) { e.printStackTrace(); System.exit(1); }
         calculateNumberOfRevisionsPerFile(releases, repoPath);
         calculateTouchedLOCAndRemovedLOCForReleaseFiles(releases, repoPath);
         calculateAddedLOCAndMaxPerFile(releases, repoPath);
@@ -65,7 +65,7 @@ public class GitController {
 
     }
 
-    public static List<RevCommit> retrieveCommits(String path) throws GitOperationException{
+    public static List<RevCommit> retrieveCommits(String path) {
         logger.log(java.util.logging.Level.INFO, "\u001B[37mRetrieving commits from repository...\u001B[0m");
         Iterable<RevCommit> commits;
         List<RevCommit> commitList=new ArrayList<>();
@@ -76,9 +76,10 @@ public class GitController {
             }
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (NoHeadException e) {
+            e.printStackTrace();
         } catch (GitAPIException e) {
-            logger.log(java.util.logging.Level.SEVERE, "Git API error retrieving commits", e);
-            throw new GitOperationException("Git API error retrieving commits ", e);
+            e.printStackTrace();
         }
         return commitList;
     }
@@ -186,10 +187,8 @@ public class GitController {
                 }
             }
         } catch (IOException e) {
-            logger.log(java.util.logging.Level.SEVERE, "IO error while accessing the repository", e);
             throw new GitOperationException("IO error while accessing the repository", e);
         } catch (GitAPIException e) {
-            logger.log(java.util.logging.Level.SEVERE, "Git API error during LOC calculation", e);
             throw new GitOperationException("Git API error during LOC calculation", e);
         }
     }
