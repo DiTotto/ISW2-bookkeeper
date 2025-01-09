@@ -1,7 +1,6 @@
 package utils;
 
 
-import common.Main;
 import jiracontroller.JiraRelease;
 import jiracontroller.JiraTicket;
 import models.Release;
@@ -40,7 +39,7 @@ public class Proportion {
         projForColdStart.addAll(projectsToAdd);
 
         int numTickets=tickets.size();
-        System.out.println("Numero di ticket: " + numTickets);
+        logger.log(java.util.logging.Level.INFO, "Numero di ticket: " + numTickets);
         movWinSize=Math.max(1, numTickets / 100); //uso il 10% dei ticket, ma almeno 1 ticket
         prop=0;
 
@@ -107,7 +106,7 @@ public class Proportion {
     public static double coldStart() throws IOException {
         //utilizzo i ticket di progetti diversi per fare il cold start
         List<Ticket> tickets = new ArrayList<>();
-        List<Double> prop_calc = new ArrayList<>();
+        List<Double> propCalc = new ArrayList<>();
         List<Release> releases = new ArrayList<>();
 
 
@@ -132,7 +131,7 @@ public class Proportion {
             }
             if(counter != 0) {
                 p = p / counter;
-                prop_calc.add(p);
+                propCalc.add(p);
             }
             System.out.println("Proportion calculated for project " + proj + ": " + p);
 
@@ -159,7 +158,7 @@ public class Proportion {
         // dato che non ci sono valori outlier, utilizzare la media invece che la mediana può risultare
         // in una stima più accurata e più corretta
         // Calcolo della media delle proportion
-        double sum = 0;
+        /*double sum = 0;
         for (double proportion : prop_calc) {
             sum += proportion;
         }
@@ -169,9 +168,9 @@ public class Proportion {
             return sum / prop_calc.size();
         } else {
             return 0; // oppure un altro valore di default, se non ci sono proporzioni
-        }
+        }*/
 
-
+        return propCalc.isEmpty() ? 0 : propCalc.stream().mapToDouble(Double::doubleValue).average().orElse(0);
 
 
     }
