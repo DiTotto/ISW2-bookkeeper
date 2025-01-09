@@ -50,7 +50,8 @@ public class JiraTicket {
 
     // Metodo per recuperare e processare i bug
     private static void fetchAndProcessIssues(String project, Map<Integer, Release> releaseIDMap, List<Ticket> tickets) throws IOException {
-        int total = 1, i = 0;
+        int total = 1;
+        int i = 0;
 
         //Get JSON API for closed bugs w/ AV in the project
         do {
