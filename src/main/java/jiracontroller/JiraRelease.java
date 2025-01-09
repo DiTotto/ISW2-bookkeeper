@@ -15,9 +15,9 @@ import static utils.JSON.readJsonFromUrl;
 
 public class JiraRelease {
 
-    public static final HashMap<LocalDateTime, String> releaseNames = new HashMap<>();
-    public static final HashMap<LocalDateTime, String> releaseID = new HashMap<>();
-    public static ArrayList<LocalDateTime> releases;
+    protected static final Map<LocalDateTime, String> releaseNames = new HashMap<>();
+    protected static final Map<LocalDateTime, String> releaseID = new HashMap<>();
+    private static final List<LocalDateTime> releases =  new ArrayList<>();
     public static Integer numVersions;
 
     private JiraRelease() {
@@ -26,7 +26,7 @@ public class JiraRelease {
 
     public static List<Release> getRelease(String project) throws IOException {
         List<Release> releaseList = new ArrayList<>();
-        releases = new ArrayList<LocalDateTime>();
+        //releases = new ArrayList<LocalDateTime>();
         Integer i;
         String url = "https://issues.apache.org/jira/rest/api/2/project/" + project;
 
@@ -58,10 +58,11 @@ public class JiraRelease {
 
         //delete half of the releases
         int halfSize = (releases.size() / 2);
-        releases = new ArrayList<>(releases.subList(0, halfSize));
+        //releases = new ArrayList<>(releases.subList(0, halfSize));
+        List<LocalDateTime> subList = releases.subList(0, halfSize);
 
         int index = 1;
-        for (LocalDateTime release : releases) {
+        for (LocalDateTime release : subList) {
             Release r  = new Release(
                     releaseNames.get(release),
                     Integer.parseInt(releaseID.get(release)),
@@ -74,7 +75,7 @@ public class JiraRelease {
 
         }
 
-        //calculateMetric(releaseList, "\\Users\\lucad\\Documents\\bookkeeper_fork"); //this is done two times
+        //calculateMetric(releaseList, "\\Users\\lucad\\Documents\\bookkeeper_fork"); this is done two times
         //one times i the main when we do releases = JiraRelease.getRelease("BOOKKEEPER");
         // then second time in the JiraTicket when is called the getTicket method, but in this case is needed only the list of the releases, so it is not necessary to calculate the metrics
         return releaseList;
