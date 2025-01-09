@@ -1,6 +1,7 @@
 package common;
 
 import acumecontroller.AcumeController;
+import exceptions.GitOperationException;
 import gitcontroller.GitController;
 import jiracontroller.JiraRelease;
 import jiracontroller.JiraTicket;
@@ -65,7 +66,7 @@ public class Main {
             calculateMetric(releases, path);
 
             // retrieve the commits of the project
-            commits = GitController.retrieveCommits(path);
+            try { commits = GitController.retrieveCommits(path); } catch (GitOperationException e) { e.printStackTrace(); return; }
 
             // associate the commits to the tickets. If the commit contains the ticket id, the commit is associated
             // to that specified ticket

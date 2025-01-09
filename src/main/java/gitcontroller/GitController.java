@@ -1,5 +1,6 @@
 package gitcontroller;
 
+import exceptions.GitOperationException;
 import models.Release;
 import models.FileJava;
 
@@ -55,7 +56,7 @@ public class GitController {
     public static void calculateMetric(List<Release> releases, String repoPath) {
         associateCommitsWithReleases(releases, repoPath);
         associateFilesWithCommits(releases, repoPath);
-        calculateLOCForReleaseFiles(releases, repoPath);
+        try { calculateLOCForReleaseFiles(releases, repoPath);} catch (GitOperationException e) { e.printStackTrace(); throw new RuntimeException(e); }
         calculateNumberOfRevisionsPerFile(releases, repoPath);
         calculateTouchedLOCAndRemovedLOCForReleaseFiles(releases, repoPath);
         calculateAddedLOCAndMaxPerFile(releases, repoPath);
@@ -64,7 +65,7 @@ public class GitController {
 
     }
 
-    public static List<RevCommit> retrieveCommits(String path) {
+    public static List<RevCommit> retrieveCommits(String path) throws GitOperationException{
         logger.log(java.util.logging.Level.INFO, "\u001B[37mRetrieving commits from repository...\u001B[0m");
         Iterable<RevCommit> commits;
         List<RevCommit> commitList=new ArrayList<>();
@@ -75,10 +76,9 @@ public class GitController {
             }
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (NoHeadException e) {
-            e.printStackTrace();
         } catch (GitAPIException e) {
-            e.printStackTrace();
+            logger.log(java.util.logging.Level.SEVERE, "Git API error retrieving commits", e);
+            throw new GitOperationException("Git API error retrieving commits ", e);
         }
         return commitList;
     }
@@ -165,17 +165,16 @@ public class GitController {
         try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
                 //ottengo tutti i commit dal repository
 
-                    for (Release release : releases) {
-                        processRelease(repository, release);
-                    }
-                //}
-            //}
+            for (Release release : releases) {
+                processRelease(repository, release);
+            }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static void calculateLOCForReleaseFiles(List<Release> releases, String repoPath) {
+    public static void calculateLOCForReleaseFiles(List<Release> releases, String repoPath) throws GitOperationException{
         logger.log(java.util.logging.Level.INFO, "\u001B[37mCalculating LOC for release files...\u001B[0m");
         try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
             for (Release release : releases) {
@@ -187,9 +186,11 @@ public class GitController {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.log(java.util.logging.Level.SEVERE, "IO error while accessing the repository", e);
+            throw new GitOperationException("IO error while accessing the repository", e);
         } catch (GitAPIException e) {
-            throw new RuntimeException(e);
+            logger.log(java.util.logging.Level.SEVERE, "Git API error during LOC calculation", e);
+            throw new GitOperationException("Git API error during LOC calculation", e);
         }
     }
 
