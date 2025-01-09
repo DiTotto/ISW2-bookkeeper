@@ -25,7 +25,6 @@ public class JiraRelease {
 
     public static List<Release> getRelease(String project) throws IOException {
         List<Release> releaseList = new ArrayList<>();
-        //releases = new ArrayList<LocalDateTime>();
         Integer i;
         String url = "https://issues.apache.org/jira/rest/api/2/project/" + project;
 
@@ -53,11 +52,10 @@ public class JiraRelease {
             }
         });
         if (releases.size() < 6)
-            return null;
+            return Collections.emptyList();
 
         //delete half of the releases
         int halfSize = (releases.size() / 2);
-        //releases = new ArrayList<>(releases.subList(0, halfSize));
         List<LocalDateTime> subList = releases.subList(0, halfSize);
 
         int index = 1;
@@ -88,7 +86,6 @@ public class JiraRelease {
             releases.add(dateTime);
         releaseNames.put(dateTime, name);
         releaseID.put(dateTime, id);
-        return;
     }
 
     public static Map<LocalDateTime, String> getReleaseNames() {
