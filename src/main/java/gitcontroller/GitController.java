@@ -266,66 +266,70 @@ public class GitController {
     //calcolare il numero di revisioni per ogni file Java in ogni release
     public static void calculateNumberOfRevisionsPerFile(List<Release> releases, String repoPath) {
         logger.log(java.util.logging.Level.INFO, "\u001B[37mCalculating number of revisions per file...\u001B[0m");
-        try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
-            try (Git git = new Git(repository)) {
+        try (Repository repository = Git.open(new File(repoPath)).getRepository(); Git git = new Git(repository)) {
                 for (Release release : releases) {
                     Map<String, Integer> fileRevisions = new HashMap<>(); //mappa per tracciare numero di revisioni per file Java
-
-                    for (RevCommit commit : release.getCommits()) {
-                        int parentCount = commit.getParentCount();
-
-                        //per ogni commit itero sui file modificati
-                        DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE);
-                        diffFormatter.setRepository(repository);
-                        List<DiffEntry> diffs;
-                        if (parentCount > 0) {
-
-                            //esegue diff tra commit attuale e primo genitore per capire quali file sono stati modificati
-                            diffs = diffFormatter.scan(commit.getParent(0), commit);
-
-                            //per ogni file .java modificato
-                            for (DiffEntry diff : diffs) {
-                                //ottengo il suo nome
-                                String filePath = diff.getNewPath();
-
-                                // Considera solo i file Java
-                                if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
-                                    //incremento il valore del contatore --> ha avuto una revisione
-                                    fileRevisions.put(filePath, fileRevisions.getOrDefault(filePath, 0) + 1);
-                                }
-                            }
-                        } else {
-                            //quando ho un commit senza genitore, controllo solo i file modificati
-
-                            //uso un albero vuoto per il confronto --> non ho genitori
-                            diffs = diffFormatter.scan(null, commit);
-
-                            for (DiffEntry diff : diffs) {
-                                String filePath = diff.getNewPath();
-
-                                if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
-                                    fileRevisions.put(filePath, fileRevisions.getOrDefault(filePath, 0) + 1);
-                                }
-                            }
-                        }
-                    }
-
-                    //per ogni file Java, aggiorno il numero di revisioni per ogni release
-                    for (Map.Entry<String, Integer> entry : fileRevisions.entrySet()) {
-                        String fileName = entry.getKey();
-                        int numberOfRevisions = entry.getValue();
-
-                        FileJava javaFile = release.getJavaFileByName(fileName);
-                        if (javaFile == null) {
-                            javaFile = new FileJava(fileName);
-                            release.addFile(javaFile);
-                        }
-                        javaFile.setNr(numberOfRevisions);
-                    }
+                    fileRevisions = calculateRevisionsForRelease(release, repository);
+                    updateReleaseFilesWithRevisions(release, fileRevisions);
                 }
             }
-        } catch (Exception e) {
+        catch (IOException e) {
             e.printStackTrace();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static Map<String, Integer> calculateRevisionsForRelease(Release release, Repository repository) throws IOException {
+        Map<String, Integer> fileRevisions = new HashMap<>();
+        try (DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
+            diffFormatter.setRepository(repository);
+
+            //per ogni commit itero sui file modificati
+            for (RevCommit commit : release.getCommits()) {
+                List<DiffEntry> diffs = getDiffsForCommit(commit, diffFormatter);
+                updateFileRevisions(fileRevisions, diffs);
+            }
+        }
+        return fileRevisions;
+    }
+
+    private static List<DiffEntry> getDiffsForCommit(RevCommit commit, DiffFormatter diffFormatter) throws IOException {
+        //esegue diff tra commit attuale e primo genitore per capire quali file sono stati modificati
+        if (commit.getParentCount() > 0) {
+            // Compare current commit with its first parent
+            return diffFormatter.scan(commit.getParent(0), commit);
+        } else {
+            //quando ho un commit senza genitore, controllo solo i file modificati
+            //uso un albero vuoto per il confronto --> non ho genitori
+            // Compare current commit with an empty tree (no parent)
+            return diffFormatter.scan(null, commit);
+        }
+    }
+
+    private static void updateFileRevisions(Map<String, Integer> fileRevisions, List<DiffEntry> diffs) {
+        for (DiffEntry diff : diffs) {
+            String filePath = diff.getNewPath();
+            // Considera solo i file Java
+            if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
+                fileRevisions.put(filePath, fileRevisions.getOrDefault(filePath, 0) + 1);
+            }
+        }
+    }
+
+    private static void updateReleaseFilesWithRevisions(Release release, Map<String, Integer> fileRevisions) {
+        //per ogni file Java, aggiorno il numero di revisioni per ogni release
+        for (Map.Entry<String, Integer> entry : fileRevisions.entrySet()) {
+            String fileName = entry.getKey();
+            int numberOfRevisions = entry.getValue();
+
+            FileJava javaFile = release.getJavaFileByName(fileName);
+            if (javaFile == null) {
+                javaFile = new FileJava(fileName);
+                release.addFile(javaFile);
+            }
+            javaFile.setNr(numberOfRevisions);
         }
     }
 
@@ -382,70 +386,100 @@ public class GitController {
             diffFormatter.setRepository(repository);
             diffFormatter.setDetectRenames(true);
 
-            AbstractTreeIterator parentTreeParser = prepareTreeParser(repository, parent);
-            AbstractTreeIterator commitTreeParser = prepareTreeParser(repository, commit);
-
-            List<DiffEntry> diffs = diffFormatter.scan(parentTreeParser, commitTreeParser);
+            List<DiffEntry> diffs = getDiffEntries(repository, parent, commit, diffFormatter);
 
             for (DiffEntry diff : diffs) {
-                String filePath = diff.getNewPath();
+                processDiffEntry(diff, javaFiles, diffFormatter, totalTouchedLocPerFile, totalRemovedLocPerFile, maxRemovedLocPerFile);
 
-                if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
-                    for (FileJava javaFile : javaFiles) {
-                        if (javaFile.getName().equals(filePath)) {
-                            int addedLines = 0;
-                            int removedLines = 0;
-
-                            for (Edit edit : diffFormatter.toFileHeader(diff).toEditList()) {
-                                addedLines += edit.getEndB() - edit.getBeginB();
-                                removedLines += edit.getEndA() - edit.getBeginA();
-                            }
-
-                            int locTouched = addedLines + removedLines;
-                            totalTouchedLocPerFile.put(filePath, totalTouchedLocPerFile.getOrDefault(filePath, 0) + locTouched);
-                            totalRemovedLocPerFile.put(filePath, totalRemovedLocPerFile.getOrDefault(filePath, 0) + removedLines);
-
-                            maxRemovedLocPerFile.put(filePath, Math.max(maxRemovedLocPerFile.getOrDefault(filePath, 0), removedLines));
-                        }
-                    }
-                }
             }
         }
     }
 
+    private static List<DiffEntry> getDiffEntries(Repository repository, RevCommit parent, RevCommit commit, DiffFormatter diffFormatter) throws IOException {
+        AbstractTreeIterator parentTreeParser = prepareTreeParser(repository, parent);
+        AbstractTreeIterator commitTreeParser = prepareTreeParser(repository, commit);
+        return diffFormatter.scan(parentTreeParser, commitTreeParser);
+    }
+
+    private static void processDiffEntry(DiffEntry diff, List<FileJava> javaFiles, DiffFormatter diffFormatter,
+                                         Map<String, Integer> totalTouchedLocPerFile,
+                                         Map<String, Integer> totalRemovedLocPerFile,
+                                         Map<String, Integer> maxRemovedLocPerFile) throws IOException {
+        String filePath = diff.getNewPath();
+        if (!filePath.endsWith(JAVA_FILE_EXTENSION)) {
+            return;
+        }
+
+        for (FileJava javaFile : javaFiles) {
+            if (javaFile.getName().equals(filePath)) {
+                processFileEdits(diff, diffFormatter, filePath, totalTouchedLocPerFile, totalRemovedLocPerFile, maxRemovedLocPerFile);
+            }
+        }
+    }
+
+    private static void processFileEdits(DiffEntry diff, DiffFormatter diffFormatter, String filePath,
+                                         Map<String, Integer> totalTouchedLocPerFile,
+                                         Map<String, Integer> totalRemovedLocPerFile,
+                                         Map<String, Integer> maxRemovedLocPerFile) throws IOException {
+        int addedLines = 0;
+        int removedLines = 0;
+
+        for (Edit edit : diffFormatter.toFileHeader(diff).toEditList()) {
+            addedLines += edit.getEndB() - edit.getBeginB();
+            removedLines += edit.getEndA() - edit.getBeginA();
+        }
+
+        int locTouched = addedLines + removedLines;
+        totalTouchedLocPerFile.put(filePath, totalTouchedLocPerFile.getOrDefault(filePath, 0) + locTouched);
+        totalRemovedLocPerFile.put(filePath, totalRemovedLocPerFile.getOrDefault(filePath, 0) + removedLines);
+        maxRemovedLocPerFile.put(filePath, Math.max(maxRemovedLocPerFile.getOrDefault(filePath, 0), removedLines));
+    }
 
     public static void calculateAddedLOCAndMaxPerFile(List<Release> releases, String repoPath) {
         logger.log(java.util.logging.Level.INFO, "\u001B[37mCalculating added LOC and max for release files...\u001B[0m");
         try (Repository repository = Git.open(new File(repoPath)).getRepository()) {
             try (Git git = new Git(repository)) {
                 for (Release release : releases) {
-                    Map<String, Integer> maxLocAddedPerFile = new HashMap<>();
+                    processReleaseForLOC(repository, release);
 
-                    for (RevCommit commit : release.getCommits()) {
-                        RevCommit parent = commit.getParentCount() > 0 ? commit.getParent(0) : null;
-
-                        if (parent != null) {
-                            calculateAddedLOCAndMaxForCommit(repository, commit, parent, release.getFiles(), maxLocAddedPerFile);
-                        } else {
-                            calculateAddedLOCAndMaxForFirstCommit(repository, commit, release.getFiles(), maxLocAddedPerFile);
-                        }
-                    }
-
-                    for (Map.Entry<String, Integer> entry : maxLocAddedPerFile.entrySet()) {
-                        String fileName = entry.getKey();
-                        int maxLocAdded = entry.getValue();
-
-                        FileJava javaFile = release.getJavaFileByName(fileName);
-                        if (javaFile == null) {
-                            javaFile = new FileJava(fileName);
-                            release.addFile(javaFile);
-                        }
-                        javaFile.setMaxLocAdded(maxLocAdded);
-                    }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    private static void processReleaseForLOC(Repository repository, Release release) throws IOException {
+        Map<String, Integer> maxLocAddedPerFile = new HashMap<>();
+
+        for (RevCommit commit : release.getCommits()) {
+            processCommitForLOC(repository, commit, release.getFiles(), maxLocAddedPerFile);
+        }
+
+        updateJavaFilesWithMaxLOC(release, maxLocAddedPerFile);
+    }
+
+    private static void processCommitForLOC(Repository repository, RevCommit commit, List<FileJava> javaFiles,
+                                      Map<String, Integer> maxLocAddedPerFile) throws IOException {
+        RevCommit parent = commit.getParentCount() > 0 ? commit.getParent(0) : null;
+        if (parent != null) {
+            calculateAddedLOCAndMaxForCommit(repository, commit, parent, javaFiles, maxLocAddedPerFile);
+        } else {
+            calculateAddedLOCAndMaxForFirstCommit(repository, commit, javaFiles, maxLocAddedPerFile);
+        }
+    }
+
+    private static void updateJavaFilesWithMaxLOC(Release release, Map<String, Integer> maxLocAddedPerFile) {
+        for (Map.Entry<String, Integer> entry : maxLocAddedPerFile.entrySet()) {
+            String fileName = entry.getKey();
+            int maxLocAdded = entry.getValue();
+            FileJava javaFile = release.getJavaFileByName(fileName);
+
+            if (javaFile == null) {
+                javaFile = new FileJava(fileName);
+                release.addFile(javaFile);
+            }
+            javaFile.setMaxLocAdded(maxLocAdded);
         }
     }
 
@@ -459,6 +493,7 @@ public class GitController {
             AbstractTreeIterator commitTreeParser = prepareTreeParser(repository, commit);
 
             List<DiffEntry> diffs = diffFormatter.scan(parentTreeParser, commitTreeParser);
+
 
             for (DiffEntry diff : diffs) {
                 String filePath = diff.getNewPath();
@@ -487,34 +522,46 @@ public class GitController {
         try (DiffFormatter diffFormatter = new DiffFormatter(DisabledOutputStream.INSTANCE)) {
             logger.log(java.util.logging.Level.INFO, "\u001B[37mCalculating added LOC and max for first commit...\u001B[0m");
             diffFormatter.setRepository(repository);
-
             List<DiffEntry> diffs = diffFormatter.scan(null, commit);
 
             for (DiffEntry diff : diffs) {
-                String filePath = diff.getNewPath();
 
-                if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
-                    int addedLines = 0;
+                processDiff(repository, diff, javaFiles, maxLocAddedPerFile);
 
-                    ObjectId objectId = diff.getNewId().toObjectId();
-                    ObjectLoader loader = repository.open(objectId);
 
-                    try (BufferedReader reader = new BufferedReader(new InputStreamReader(loader.openStream()))) {
-                        String line;
-                        while ((line = reader.readLine()) != null) {
-                            if (!line.trim().isEmpty()) {
-                                addedLines++;
-                            }
-                        }
-                    }
+            }
+        }
+    }
 
-                    for (FileJava javaFile : javaFiles) {
-                        if (javaFile.getName().equals(filePath)) {
-                            javaFile.setLocAdded(javaFile.getLocAdded() + addedLines);
-                            maxLocAddedPerFile.put(filePath, Math.max(maxLocAddedPerFile.getOrDefault(filePath, 0), addedLines));
-                        }
-                    }
+    private static void processDiff(Repository repository, DiffEntry diff, List<FileJava> javaFiles, Map<String, Integer> maxLocAddedPerFile) throws IOException {
+        String filePath = diff.getNewPath();
+        if (filePath.endsWith(JAVA_FILE_EXTENSION)) {
+            int addedLines = calculateAddedLines(repository, diff);
+            updateFileLocAdded(javaFiles, filePath, addedLines, maxLocAddedPerFile);
+        }
+    }
+
+    private static int calculateAddedLines(Repository repository, DiffEntry diff) throws IOException {
+        int addedLines = 0;
+        ObjectId objectId = diff.getNewId().toObjectId();
+        ObjectLoader loader = repository.open(objectId);
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(loader.openStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (!line.trim().isEmpty()) {
+                    addedLines++;
                 }
+            }
+        }
+        return addedLines;
+    }
+
+    private static void updateFileLocAdded(List<FileJava> javaFiles, String filePath, int addedLines, Map<String, Integer> maxLocAddedPerFile) {
+        for (FileJava javaFile : javaFiles) {
+            if (javaFile.getName().equals(filePath)) {
+                javaFile.setLocAdded(javaFile.getLocAdded() + addedLines);
+                maxLocAddedPerFile.put(filePath, Math.max(maxLocAddedPerFile.getOrDefault(filePath, 0), addedLines));
             }
         }
     }

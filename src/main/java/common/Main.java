@@ -1,7 +1,6 @@
 package common;
 
 import acumecontroller.AcumeController;
-import exceptions.GitOperationException;
 import gitcontroller.GitController;
 import jiracontroller.JiraRelease;
 import jiracontroller.JiraTicket;
