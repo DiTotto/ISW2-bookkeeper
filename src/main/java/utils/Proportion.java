@@ -1,6 +1,7 @@
 package utils;
 
 
+import common.Main;
 import jiracontroller.JiraRelease;
 import jiracontroller.JiraTicket;
 import models.Release;
@@ -8,6 +9,7 @@ import models.Ticket;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class Proportion {
 
@@ -16,10 +18,12 @@ public class Proportion {
     private static int movWinSize;
     private static double prop;
     private static final List<Ticket> ticketofProportion=new ArrayList<>();
+    private static final Logger logger = Logger.getLogger(Main.class.getName());
 
     private Proportion() {
         throw new IllegalStateException("Utility class");
     }
+
 
     public static void getProportion(List<Ticket> tickets, String projectName) throws IOException {
 
@@ -33,8 +37,6 @@ public class Proportion {
         List<String> projectsToAdd = projectMap.getOrDefault(projectName,
                 List.of("AVRO", "OPENJPA", "ZOOKEEPER", "STORM", "TAJO"));
 
-        //List<String> projectsToAdd = List.of("AVRO", "OPENJPA", "ZOOKEEPER", "STORM", "TAJO");
-        //List<String> projectsToAdd = List.of("AVRO");
         projForColdStart.addAll(projectsToAdd);
 
         int numTickets=tickets.size();
@@ -55,20 +57,15 @@ public class Proportion {
                 //sono all'inizio e uso cold start
                 if (ticketofProportion.size() < movWinSize) {
                     if (prop==0) {
-                        //prop = coldStart();
-                        System.out.println("Cold Start");
+                        logger.log(java.util.logging.Level.INFO, "Cold Start");
                         prop = coldStart();
-                        //System.out.println("Proportion calculated from cold start: " + prop);
-                        System.out.println("moving window");
+                        logger.log(java.util.logging.Level.INFO, "Moving window");
                     }
                     //non faccio nulla e aspetto di riempire la finestra mobile
                 } else {
-                    //System.out.println("moving window");
                     prop = movingWindow();
 
                 }
-
-                //System.out.println("Proportion: " + prop);
 
                 setInjectedVersion(ticket);
             }
@@ -143,24 +140,6 @@ public class Proportion {
 
         }
 
-        /*tickets = JiraTicket.getTickets("AVRO", null);
-        for(Ticket ticket: tickets){
-            if(ticket.getInjectedVersion() != null && ticket.getOpeningVersion() != null && ticket.getFixedVersion() != null
-                    && ticket.getOpeningVersion() != ticket.getFixedVersion()){
-                if((double) (ticket.getFixedVersion() - ticket.getInjectedVersion()) / (ticket.getFixedVersion() - ticket.getOpeningVersion()) > 1 ) {
-                    p += (double) (ticket.getFixedVersion() - ticket.getInjectedVersion()) / (ticket.getFixedVersion() - ticket.getOpeningVersion());
-                }else{
-                    p += 1;
-                }
-                counter++;
-            }
-        }
-        if(counter != 0) {
-            p = p / counter;
-            prop_calc.add(p);
-        }
-        return p;
-        */
 
         //////////////////////////
         // STUDIARE ASSUNZIONE, è piu giusto usare la media o usare la mediana?
