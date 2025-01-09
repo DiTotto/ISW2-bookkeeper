@@ -102,10 +102,10 @@ public class ClassifierMetrics {
         return fn;
     }
 
-    public double getPercentOfTheTraining() {
+
+    public double getPercentageOfTraining() {
         return percentOfTheTraining;
     }
-
 
     public String getSamplingType() {
         return samplingType;
@@ -200,7 +200,5 @@ public class ClassifierMetrics {
                 '}';
     }
 
-    public double getPercentageOfTraining() {
-        return percentOfTheTraining;
-    }
+
 }
