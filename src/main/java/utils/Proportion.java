@@ -23,14 +23,16 @@ public class Proportion {
 
     public static void getProportion(List<Ticket> tickets, String projectName) throws IOException {
 
-        List<String> projectsToAdd;
-        if (projectName.equals("BOOKKEEPER")){
-            projectsToAdd = List.of("AVRO", "ZOOKEEPER");
-        }else if (projectName.equals("SYNCOPE")){
-            projectsToAdd = List.of("OPENJPA", "PROTON");
-        }else{
-            projectsToAdd = List.of("AVRO", "OPENJPA", "ZOOKEEPER", "STORM", "TAJO");
-        }
+        // Utilizza una mappa per gestire le associazioni projectName -> projectsToAdd
+        Map<String, List<String>> projectMap = Map.of(
+                "BOOKKEEPER", List.of("AVRO", "ZOOKEEPER"),
+                "SYNCOPE", List.of("OPENJPA", "PROTON")
+        );
+
+        // Aggiunge progetti di default se il projectName non è presente nella mappa
+        List<String> projectsToAdd = projectMap.getOrDefault(projectName,
+                List.of("AVRO", "OPENJPA", "ZOOKEEPER", "STORM", "TAJO"));
+
         //List<String> projectsToAdd = List.of("AVRO", "OPENJPA", "ZOOKEEPER", "STORM", "TAJO");
         //List<String> projectsToAdd = List.of("AVRO");
         projForColdStart.addAll(projectsToAdd);
