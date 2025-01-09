@@ -23,16 +23,11 @@ public class JiraTicket {
     private static final String FIELDS_KEY = "fields";
 
     public static List<Ticket> getTickets(String project, List<Release> releaseList) throws IOException {
-        Integer j = 0, i = 0, total = 1;
-        Integer injectionVersion = null;
 
         List<Ticket> tickets = new ArrayList<>();
 
-        //HashMap<Integer, Release> releseIDMap = new HashMap<>();
         Map<Integer, Release> releaseIDMap = createReleaseIDMap(project, releaseList);
-        int totalIssues = fetchAndProcessIssues(project, releaseIDMap, tickets);
-
-
+        fetchAndProcessIssues(project, releaseIDMap, tickets);
         processTickets(tickets, releaseList);
 
         return tickets;
@@ -54,7 +49,7 @@ public class JiraTicket {
     }
 
     // Metodo per recuperare e processare i bug
-    private static int fetchAndProcessIssues(String project, Map<Integer, Release> releaseIDMap, List<Ticket> tickets) throws IOException {
+    private static void fetchAndProcessIssues(String project, Map<Integer, Release> releaseIDMap, List<Ticket> tickets) throws IOException {
         int total = 1, i = 0;
 
         //Get JSON API for closed bugs w/ AV in the project
@@ -76,7 +71,6 @@ public class JiraTicket {
             i = j;
         } while (i < total);
 
-        return total;
     }
 
     // Metodo per costruire la URL di query
