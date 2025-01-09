@@ -18,7 +18,6 @@ public class JiraRelease {
     protected static final Map<LocalDateTime, String> releaseNames = new HashMap<>();
     protected static final Map<LocalDateTime, String> releaseID = new HashMap<>();
     private static final List<LocalDateTime> releases =  new ArrayList<>();
-    public static Integer numVersions;
 
     private JiraRelease() {
         throw new IllegalStateException("Utility class");
