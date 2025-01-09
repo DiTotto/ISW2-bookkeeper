@@ -19,8 +19,7 @@ public class JSON {
         try {
             BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
             String jsonText = readAll(rd);
-            JSONObject json = new JSONObject(jsonText);
-            return json;
+            return new JSONObject(jsonText);
         } finally {
             is.close();
         }
@@ -31,8 +30,7 @@ public class JSON {
         try {
             BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
             String jsonText = readAll(rd);
-            JSONArray json = new JSONArray(jsonText);
-            return json;
+            return new JSONArray(jsonText);
         } finally {
             is.close();
         }
