@@ -18,7 +18,7 @@ public class Proportion {
     private static int movWinSize;
     private static double prop;
     private static final List<Ticket> ticketofProportion=new ArrayList<>();
-    private static final Logger logger = Logger.getLogger(Main.class.getName());
+    private static final Logger logger = Logger.getLogger(Proportion.class.getName());
 
     private Proportion() {
         throw new IllegalStateException("Utility class");
@@ -74,7 +74,7 @@ public class Proportion {
 
     public static void setInjectedVersion(Ticket ticket) {
 
-        if (ticket.getFixedVersion() == ticket.getOpeningVersion()) {
+        if (Objects.equals(ticket.getFixedVersion(), ticket.getOpeningVersion())) {
             ticket.setInjectedVersion((int) Math.floor(ticket.getFixedVersion()-prop));
         }else {
             ticket.setInjectedVersion((int) Math.floor((ticket.getFixedVersion() - (ticket.getFixedVersion() - ticket.getOpeningVersion()) * prop)));
@@ -88,7 +88,7 @@ public class Proportion {
         int k=0;
         double p = 0;
         for(Ticket t : ticketofProportion) {
-            if(t.getFixedVersion() != t.getOpeningVersion()) {
+            if(!Objects.equals(t.getFixedVersion(), t.getOpeningVersion())) {
                 p += (double) (t.getFixedVersion() - t.getInjectedVersion()) / (t.getFixedVersion() - t.getOpeningVersion());
             }else{
                 //evito la divisione per zero
@@ -109,25 +109,24 @@ public class Proportion {
         List<Ticket> tickets = new ArrayList<>();
         List<Double> prop_calc = new ArrayList<>();
         List<Release> releases = new ArrayList<>();
-        double p = 0;
-        int counter = 0;
+
+
 
         //calcolo la proportion per ogni progetto e lo inserisco nella lista
         //utilizzo la media delle proporzioni per fare il cold start
 
         for(String proj : projForColdStart) {
-            counter = 0;
+            int counter = 0;
+            double p = 0;
             tickets.clear();
             releases = JiraRelease.getRelease(proj);
             tickets = JiraTicket.getTickets(proj, releases);
             for(Ticket ticket: tickets){
+                // verifico che il ticket abbia le informazioni necessarie
                 if(ticket.getInjectedVersion() != null && ticket.getOpeningVersion() != null && ticket.getFixedVersion() != null
                         && (!Objects.equals(ticket.getOpeningVersion(), ticket.getFixedVersion()))){
-                    if((double) (ticket.getFixedVersion() - ticket.getInjectedVersion()) / (ticket.getFixedVersion() - ticket.getOpeningVersion()) > 1 ) {
-                        p += (double) (ticket.getFixedVersion() - ticket.getInjectedVersion()) / (ticket.getFixedVersion() - ticket.getOpeningVersion());
-                    }else{
-                        p += 1;
-                    }
+                    double proportion = (double) (ticket.getFixedVersion() - ticket.getInjectedVersion()) / (ticket.getFixedVersion() - ticket.getOpeningVersion());
+                    p += (proportion > 1) ? proportion : 1;
                     counter++;
                 }
             }
