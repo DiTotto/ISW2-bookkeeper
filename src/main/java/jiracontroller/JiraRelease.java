@@ -15,8 +15,8 @@ import static utils.JSON.readJsonFromUrl;
 
 public class JiraRelease {
 
-    public static HashMap<LocalDateTime, String> releaseNames;
-    public static HashMap<LocalDateTime, String> releaseID;
+    public static final HashMap<LocalDateTime, String> releaseNames = new HashMap<>();
+    public static final HashMap<LocalDateTime, String> releaseID = new HashMap<>();
     public static ArrayList<LocalDateTime> releases;
     public static Integer numVersions;
 
@@ -32,8 +32,7 @@ public class JiraRelease {
 
         JSONObject json = readJsonFromUrl(url);
         JSONArray versions = json.getJSONArray("versions");
-        releaseNames = new HashMap<LocalDateTime, String>();
-        releaseID = new HashMap<LocalDateTime, String> ();
+
         for (i = 0; i < versions.length(); i++ ) {
             String name = "";
             String id = "";
@@ -92,6 +91,14 @@ public class JiraRelease {
         return;
     }
 
+    public static Map<LocalDateTime, String> getReleaseNames() {
+        return releaseNames;
+    }
+
+    // Getter per releaseID
+    public static Map<LocalDateTime, String> getReleaseID() {
+        return releaseID;
+    }
 
 
 
