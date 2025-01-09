@@ -72,9 +72,7 @@ public class JiraRelease {
 
         }
 
-        //calculateMetric(releaseList, "\\Users\\lucad\\Documents\\bookkeeper_fork"); this is done two times
-        //one times i the main when we do releases = JiraRelease.getRelease("BOOKKEEPER");
-        // then second time in the JiraTicket when is called the getTicket method, but in this case is needed only the list of the releases, so it is not necessary to calculate the metrics
+
         return releaseList;
     }
 
