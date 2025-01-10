@@ -1,7 +1,6 @@
 package wekacontroller;
 
 import models.ClassifierMetrics;
-import models.FeatureSelectionConfig;
 import weka.classifiers.Classifier;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.lazy.IBk;
@@ -244,7 +243,7 @@ public class WekaController {
         // -M 1.0 = undersampling 1:1 --> il filtro rimuoverà abbastanza istanze della classe maggioritaria per mantenere un rapporto di 1:1
         // Bilanciamento classi di maggioranza
         underSampler.setOptions(Utils.splitOptions("-M 1.0"));
-        //Instances underSampledTrainingData = Filter.useFilter(trainingData, underSampler);
+
 
         // ---- RUN CON I DATI UNDER-SAMPLED ----
         for (Classifier classifier : classifiers) {
@@ -252,7 +251,6 @@ public class WekaController {
             fc.setFilter(underSampler);
             fc.setClassifier(classifier);
             fc.buildClassifier(filteredTrainingData);
-            //Evaluation evalModel = new Evaluation(filteredTestingData);
             Evaluation evalModel = new Evaluation(testingData);
             evalModel.evaluateModel(fc, filteredTestingData);
 
@@ -283,9 +281,8 @@ public class WekaController {
                 majorityCount = count;
             }
         }
-        double majorityClassPercentage = (double) majorityCount / data.numInstances() * 100.0;
 
-        return majorityClassPercentage;
+        return (double) majorityCount / data.numInstances() * 100.0;
     }
 
 
@@ -316,7 +313,6 @@ public class WekaController {
         Resample overSampler = new Resample();
         overSampler.setInputFormat(filteredTrainingData);
         double majorityClassPercentage = calculateMajorityClassPercentage(filteredTrainingData);
-        //double majorityClassPercentage = 65.0;
         double sampleSize = majorityClassPercentage * 2;
         overSampler.setOptions(Utils.splitOptions("-B 1.0 -Z " + sampleSize));
         // -B 1.0 = oversampling 1:1 --> il filtro aggiungerà un numero sufficiente di istanze della classe minoritaria per mantenere un rapporto 1:1
