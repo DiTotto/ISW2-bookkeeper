@@ -98,7 +98,7 @@ public class WriteCSV {
     public static void writeWekaCalculation(List<ClassifierMetrics> metrics) throws IOException {
         DecimalFormat decimalFormat = new DecimalFormat("#.#####");
         String featureSelection;
-        String cost_sensitive;
+        String costSensitive;
 
         try( CSVWriter writer = new CSVWriter(new FileWriter(metrics.get(0).getNameProject() + "/fileCSV/weka_metrics.csv"))) {
             // Intestazione del CSV
@@ -112,9 +112,9 @@ public class WriteCSV {
                     featureSelection = "NONE";
                 }
                 if(metric.isCostSensitive()){
-                    cost_sensitive = "SENSITIVE_LEARNING";
+                    costSensitive = "SENSITIVE_LEARNING";
                 }else {
-                    cost_sensitive = "NONE";
+                    costSensitive = "NONE";
                 }
 
                 String[] metricData = {
@@ -123,7 +123,7 @@ public class WriteCSV {
                         String.valueOf(metric.getIteration()),
                         featureSelection,
                         metric.getSamplingType(),
-                        cost_sensitive,
+                        costSensitive,
                         decimalFormat.format(metric.getPrecision()),
                         decimalFormat.format(metric.getRecall()),
                         decimalFormat.format(metric.getAuc()),
@@ -143,14 +143,14 @@ public class WriteCSV {
         }
     }
 
-    public static void writeOnAcumeCSV(List<AcumeModel> AcumeList) {
+    public static void writeOnAcumeCSV(List<AcumeModel> acumeList) {
         try (CSVWriter writer = new CSVWriter(new FileWriter("ACUME-master/csv/acume.csv"))) {
             // Intestazione del CSV
             String[] header = { "ID", "Size", "Probability", "Value" };
             writer.writeNext(header);
 
             // Itera sulle release e sui file per scrivere i dati
-            for (AcumeModel acume : AcumeList) {
+            for (AcumeModel acume : acumeList) {
                 String[] acumeData = {
                         String.valueOf(acume.getId()),               // ID
                         String.valueOf(acume.getSize()),             // SIZE
