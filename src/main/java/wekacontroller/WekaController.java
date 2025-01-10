@@ -1,7 +1,7 @@
 package wekacontroller;
 
 import models.ClassifierMetrics;
-import utils.Proportion;
+import models.FeatureSelectionConfig;
 import weka.classifiers.Classifier;
 import weka.classifiers.bayes.NaiveBayes;
 import weka.classifiers.lazy.IBk;
@@ -132,7 +132,8 @@ public class WekaController {
                 runSimpleClassifier(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
 
                 // ---- RUN CON FUTURE SELECTION (BEST FIRST) SENZA SAMPLING ----
-                runWithFeatureSelection(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers, false, false);
+
+                runWithFeatureSelection(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
 
                 // ---- RUN CON FUTURE SELECTION E UNDER-SAMPLING ----
                 runWithFeatureSelectionAndUnderSampling(nameProj, walkIteration, trainingData, testingData, metricOfClassifierList, classifiers);
@@ -148,7 +149,10 @@ public class WekaController {
             WriteCSV.writeWekaCalculation(metricOfClassifierList);
 
             for(int j = 0; j < metricOfClassifierList.size(); j++) {
-                logger.log(java.util.logging.Level.INFO, ANSI_WHITE + metricOfClassifierList.get(j).toString() + ANSI_RESET);
+                if (logger.isLoggable(java.util.logging.Level.INFO)) {
+                    String message = String.format("%s%s%s", ANSI_WHITE, metricOfClassifierList.get(j), ANSI_RESET);
+                    logger.log(java.util.logging.Level.INFO, message);
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -178,7 +182,7 @@ public class WekaController {
 
 
     private static void runWithFeatureSelection(String nameProj, int walkIteration, Instances trainingData, Instances testingData,
-                                                List<ClassifierMetrics> metricOfClassifierList, Classifier[] classifiers, boolean isUnderSampling, boolean isOverSampling) throws Exception {
+                                                List<ClassifierMetrics> metricOfClassifierList, Classifier[] classifiers) throws Exception {
 
         // ---- FEATURE SELECTION ----
         AttributeSelection attributeSelection = new AttributeSelection();
@@ -202,7 +206,6 @@ public class WekaController {
 
         for (Classifier classifier : classifiers) {
             classifier.buildClassifier(filteredTrainingData);
-            //Evaluation evalModel = new Evaluation(filteredTestingData);
             Evaluation evalModel = new Evaluation(testingData);
             evalModel.evaluateModel(classifier, filteredTestingData);
 
