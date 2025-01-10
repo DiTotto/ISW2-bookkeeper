@@ -45,7 +45,7 @@ public class WriteCSV {
             String trainingCsvFilePath = baseCsvFilePathForTraining + "training_step_" + i + ".csv";
 
 
-            //writeReleasesToCsv(releases.subList(0, i), trainingCsvFilePath);
+
             writeReleasesToCsv(releaseList, trainingCsvFilePath);
             // File di test: contiene la release successiva alla i-esima
             Bugginess.markBuggyFilesUsingAffectedVersions(tickets, releases.subList(i, i + 1), repoPath);

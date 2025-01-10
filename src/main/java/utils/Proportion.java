@@ -19,6 +19,9 @@ public class Proportion {
     private static final List<Ticket> ticketofProportion=new ArrayList<>();
     private static final Logger logger = Logger.getLogger(Proportion.class.getName());
 
+    public static final String ANSI_WHITE = "\u001B[37m";
+    public static final String ANSI_RESET = "\u001B[0m";
+
     private Proportion() {
         throw new IllegalStateException("Utility class");
     }
@@ -39,7 +42,7 @@ public class Proportion {
         projForColdStart.addAll(projectsToAdd);
 
         int numTickets=tickets.size();
-        logger.log(java.util.logging.Level.INFO, "Numero di ticket: {0}", numTickets);
+        logger.log(java.util.logging.Level.INFO, ANSI_WHITE + "Numero di ticket: {0}" + ANSI_RESET, numTickets);
         movWinSize=Math.max(1, numTickets / 100); //uso il 10% dei ticket, ma almeno 1 ticket
         prop=0;
 
@@ -56,9 +59,9 @@ public class Proportion {
                 //sono all'inizio e uso cold start
                 if (ticketofProportion.size() < movWinSize) {
                     if (prop==0) {
-                        logger.log(java.util.logging.Level.INFO, "Cold Start");
+                        logger.log(java.util.logging.Level.INFO,ANSI_WHITE + "Cold Start" + ANSI_RESET);
                         prop = coldStart();
-                        logger.log(java.util.logging.Level.INFO, "Moving window");
+                        logger.log(java.util.logging.Level.INFO,ANSI_WHITE + "Moving window" + ANSI_RESET);
                     }
                     //non faccio nulla e aspetto di riempire la finestra mobile
                 } else {
@@ -133,7 +136,7 @@ public class Proportion {
                 p = p / counter;
                 propCalc.add(p);
             }
-            logger.log(java.util.logging.Level.INFO, "Proportion calculated for project {0}: {1}", new Object[]{proj, p});
+            logger.log(java.util.logging.Level.INFO, ANSI_WHITE+"Proportion calculated for project {0}: {1}" + ANSI_RESET, new Object[]{proj, p});
         }
 
         //////////////////////////
