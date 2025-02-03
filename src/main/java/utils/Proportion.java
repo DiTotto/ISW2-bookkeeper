@@ -110,14 +110,9 @@ public class Proportion {
 
     public static double coldStart() throws IOException {
         //utilizzo i ticket di progetti diversi per fare il cold start
-        List<Ticket> tickets = new ArrayList<>();
         List<Double> propCalc = new ArrayList<>();
-        List<Release> releases = new ArrayList<>();
-
-
-
         //calcolo la proportion per ogni progetto e lo inserisco nella lista
-        //utilizzo la media delle proporzioni per fare il cold start
+        //utilizzo la mediana delle proporzioni per fare il cold start
 
         for(String proj : projForColdStart) {
 
