@@ -73,7 +73,7 @@ public class Proportion {
                 setInjectedVersion(ticket);
             }
         }
-        System.out.println("Proportion: " + prop);
+        logger.log(java.util.logging.Level.INFO, ANSI_WHITE+"Proportion calculated for project {0}: {1}" + ANSI_RESET, new Object[]{projectName, prop});
     }
 
     public static void setInjectedVersion(Ticket ticket) {
@@ -120,26 +120,16 @@ public class Proportion {
         //utilizzo la media delle proporzioni per fare il cold start
 
         for(String proj : projForColdStart) {
-            int counter = 0;
-            double p = 0;
-            tickets.clear();
-            releases = JiraRelease.getRelease(proj);
-            tickets = JiraTicket.getTickets(proj, releases);
-            for(Ticket ticket: tickets){
-                // verifico che il ticket abbia le informazioni necessarie
-                if(ticket.getInjectedVersion() != null && ticket.getOpeningVersion() != null && ticket.getFixedVersion() != null
-                        && (!Objects.equals(ticket.getOpeningVersion(), ticket.getFixedVersion()))){
-                    double proportion = (double) (ticket.getFixedVersion() - ticket.getInjectedVersion()) / (ticket.getFixedVersion() - ticket.getOpeningVersion());
-                    p += (proportion > 1) ? proportion : 1;
-                    counter++;
-                }
-            }
-            if(counter != 0) {
-                p = p / counter;
+
+            double p = calculateProportionForProject(proj);
+            if (p != -1) {
                 propCalc.add(p);
             }
             logger.log(java.util.logging.Level.INFO, ANSI_WHITE+"Proportion calculated for project {0}: {1}" + ANSI_RESET, new Object[]{proj, p});
         }
+
+        //restituisco la mediana delle proportion
+        return calculateMedian(propCalc);
 
         //////////////////////////
         // STUDIARE ASSUNZIONE, è piu giusto usare la media o usare la mediana?
@@ -154,26 +144,45 @@ public class Proportion {
 
 
         // Se la lista è vuota, restituisco 0 per evitare errori
-        if (propCalc.isEmpty()) {
-            return 0;
-        }
-        // Ordino la lista in ordine crescente
-        Collections.sort(propCalc);
 
-       // Calcolo la mediana
-        int size = propCalc.size();
-        if (size % 2 == 1) {
-            return propCalc.get(size / 2);  // Dispari: prendo l'elemento centrale
-        } else {
-            return (propCalc.get(size / 2 - 1) + propCalc.get(size / 2)) / 2.0;  // Pari: media dei due centrali
-        }
 
-        // restituisco la media dei valori di proportion calcolati
-        // dato che non ci sono valori outlier, utilizzare la media invece che la mediana può risultare
+        // quando non ci sono valori outlier, utilizzare la media invece che la mediana può risultare
         // in una stima più accurata e più corretta
         // Calcolo della media delle proportion
 
 
     }
 
+    private static double calculateProportionForProject(String proj) throws IOException {
+        List<Ticket> tickets = JiraTicket.getTickets(proj, JiraRelease.getRelease(proj));
+        double totalProportion = 0;
+        int counter = 0;
+
+        for (Ticket ticket : tickets) {
+            if (isValidTicket(ticket)) {
+                double proportion = (double) (ticket.getFixedVersion() - ticket.getInjectedVersion()) /
+                        (ticket.getFixedVersion() - ticket.getOpeningVersion());
+                totalProportion += (proportion > 1) ? proportion : 1;
+                counter++;
+            }
+        }
+        return (counter != 0) ? totalProportion / counter : -1;
+    }
+
+    private static boolean isValidTicket(Ticket ticket) {
+        return ticket.getInjectedVersion() != null &&
+                ticket.getOpeningVersion() != null &&
+                ticket.getFixedVersion() != null &&
+                !Objects.equals(ticket.getOpeningVersion(), ticket.getFixedVersion());
+    }
+
+    private static double calculateMedian(List<Double> values) {
+        if (values.isEmpty()) {
+            return 0;
+        }
+        Collections.sort(values);
+        int size = values.size();
+        return (size % 2 == 1) ? values.get(size / 2) :
+                (values.get(size / 2 - 1) + values.get(size / 2)) / 2.0;
+    }
 }
