@@ -27,8 +27,8 @@ public class JiraTicket {
         List<Ticket> tickets = new ArrayList<>();
 
         Map<Integer, Release> releaseIDMap = createReleaseIDMap(project, releaseList);
-        fetchAndProcessIssues(project, releaseIDMap, tickets);
-        processTickets(tickets, releaseList);
+        fetchAndProcessIssues(project, releaseIDMap, tickets); // recupero i bug e li processa, recuperando IV, data di apertura e di risoluzione del  ticket
+        processTickets(tickets, releaseList); //viene recuperata IV e calcolo OV e FV
 
         return tickets;
     }

@@ -47,6 +47,7 @@ public class Main {
 
             logger.log(java.util.logging.Level.INFO, "\u001B[32mStarting...\u001B[0m");
             Properties properties = loadConfiguration();
+            // viene selezionato il progetto di cui si vuole fare l'analisi
             String project = properties.getProperty("main.projectB", "defaultProject");
             String path = properties.getProperty("main.pathB", "defaultPath");
 

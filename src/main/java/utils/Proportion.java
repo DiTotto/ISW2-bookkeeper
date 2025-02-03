@@ -43,7 +43,8 @@ public class Proportion {
 
         int numTickets=tickets.size();
         logger.log(java.util.logging.Level.INFO, ANSI_WHITE + "Numero di ticket: {0}" + ANSI_RESET, numTickets);
-        movWinSize=Math.max(1, numTickets / 100); //uso il 10% dei ticket, ma almeno 1 ticket
+        //movWinSize=Math.max(1, numTickets / 100); //uso il 10% dei ticket, ma almeno 1 ticket
+        movWinSize=Math.max(1, 5); //uso il 10% dei ticket, ma almeno 1 ticket
         prop=0;
 
 
@@ -72,6 +73,7 @@ public class Proportion {
                 setInjectedVersion(ticket);
             }
         }
+        System.out.println("Proportion: " + prop);
     }
 
     public static void setInjectedVersion(Ticket ticket) {
@@ -147,34 +149,29 @@ public class Proportion {
         //restituisco la mediana delle proportion
         //se dispari restituisco il valore centrale
         //se pari restituisco la media dei due valori centrali
-        /*
-        Il codice seguente è necessario nel caso in cui debba essere usata la mediana piuttosto che la media
 
-        prop_calc.sort(Comparator.naturalOrder());
+        //Il codice seguente è necessario nel caso in cui debba essere usata la mediana piuttosto che la media
 
-        if(prop_calc.size() % 2 == 0) {
-            return ((prop_calc.get(prop_calc.size() / 2) + prop_calc.get(prop_calc.size() / 2 - 1)) / 2);
+
+        // Se la lista è vuota, restituisco 0 per evitare errori
+        if (propCalc.isEmpty()) {
+            return 0;
+        }
+        // Ordino la lista in ordine crescente
+        Collections.sort(propCalc);
+
+       // Calcolo la mediana
+        int size = propCalc.size();
+        if (size % 2 == 1) {
+            return propCalc.get(size / 2);  // Dispari: prendo l'elemento centrale
         } else {
-            return (prop_calc.get(prop_calc.size() / 2));
-        }*/
+            return (propCalc.get(size / 2 - 1) + propCalc.get(size / 2)) / 2.0;  // Pari: media dei due centrali
+        }
 
         // restituisco la media dei valori di proportion calcolati
         // dato che non ci sono valori outlier, utilizzare la media invece che la mediana può risultare
         // in una stima più accurata e più corretta
         // Calcolo della media delle proportion
-        /*double sum = 0;
-        for (double proportion : prop_calc) {
-            sum += proportion;
-        }
-
-        // Verifica che prop_calc non sia vuota per evitare divisione per zero
-        if (!prop_calc.isEmpty()) {
-            return sum / prop_calc.size();
-        } else {
-            return 0; // oppure un altro valore di default, se non ci sono proporzioni
-        }*/
-
-        return propCalc.isEmpty() ? 0 : propCalc.stream().mapToDouble(Double::doubleValue).average().orElse(0);
 
 
     }
