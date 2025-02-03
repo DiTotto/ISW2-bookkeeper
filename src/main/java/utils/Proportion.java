@@ -3,7 +3,6 @@ package utils;
 
 import jiracontroller.JiraRelease;
 import jiracontroller.JiraTicket;
-import models.Release;
 import models.Ticket;
 
 import java.io.IOException;
